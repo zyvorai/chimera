@@ -28,7 +28,8 @@ The embedded, zero-dependency dashboard is a full infrastructure command center:
 - visual datacenter → cluster → host → datastore topology
 - traffic-activity donut driven by real gateway request classes
 - live request feed with method, path, HTTP status and duration
-- searchable/paginated VM inventory with power-state filters and export selection
+- searchable/paginated VM inventory with power-state filters, export selection, and a per-VM Fixture badge (real file vs. synthetic)
+- VMDK Library panel showing every fixture file and which VM it's assigned to, live-updated as files are added/removed
 - deterministic scenario launcher for clean, slow, flaky and resume paths
 - slide-over Fault Studio for latency, status codes, API/NFC failures, stream drops and bandwidth caps
 - session-only admin-token unlock flow
@@ -176,7 +177,7 @@ CHIMERA_FIXTURE_VMDK_DIR=/lab/fixtures \
 ./bin/chimera serve -listen 0.0.0.0:8989
 ```
 
-Matching is two-pass: a file named after a VM (e.g. `DC0_C0_RP0_VM0.vmdk`) is assigned to that VM; any leftover files and VMs are then paired off in sorted order. VMs that still get nothing keep the default generated fixture. Mutually exclusive with `fixture_vmdk`. See the VMDK Library panel in the Command Center, or `GET /__chimera/api/vmdks`, to see the resulting assignment.
+Matching is two-pass: a file named after a VM (e.g. `DC0_C0_RP0_VM0.vmdk`) is assigned to that VM; any leftover files and VMs are then paired off in sorted order. VMs that still get nothing keep the default generated fixture. Mutually exclusive with `fixture_vmdk`. The directory is re-scanned automatically every 5 seconds — drop in (or remove) a file and it's picked up without restarting the server. See the VMDK Library panel in the Command Center, or `GET /__chimera/api/vmdks`, to see the resulting assignment.
 
 Don't have a real VMDK handy? `make fixtures` fetches a small, official, checksummed Alpine Linux cloud image and converts it to VMDK automatically (see `scripts/fetch-sample-fixtures.sh`):
 

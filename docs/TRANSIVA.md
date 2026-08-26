@@ -122,6 +122,17 @@ Matching is two-pass: a file whose name (minus extension) matches a VM's name �
 
 Don't have a real VMDK handy? `make fixtures` (`scripts/fetch-sample-fixtures.sh`) fetches a small, official, checksummed Alpine Linux cloud image and converts it to VMDK automatically — so the export path serves a genuinely real, valid disk image out of the box instead of the generated filler bytes. `scripts/verify-real-fixture.sh` proves this end-to-end: it downloads the *complete* exported disk (via `chimera selftest -vm <name> -save <path>`, not just the default 4KB probe) and confirms `qemu-img info` recognizes it as a valid image.
 
+## Connecting via Transiva's web dashboard (Providers page)
+
+Transiva's daemon (`transivad`) also has its own "Providers" UI (`Migrate hub → Providers → Connect vSphere`) as an alternative to the CLI config above. Since Chimera doesn't serve TLS by default, the **vCenter Host** field needs an explicit `http://` prefix — Transiva's connect form otherwise assumes `https://` for a bare `host:port` and the connection will fail with `server gave HTTP response to HTTPS client`:
+
+- vCenter Host: `http://<chimera-host>:8989` (or the full `http://<chimera-host>:8989/sdk`)
+- Username: `administrator@vsphere.local`
+- Password: `vmware`
+- Datacenter: `DC0`
+
+Once connected, VM discovery for that provider goes through Transiva's `GET /api/providers/vms?provider=vsphere` (not the legacy `/vms/list`), so navigate to the **VMs** tab or **Migrate hub** to see Chimera's simulated inventory rather than expecting it on the connect dialog itself.
+
 ## Remote/container clients
 
 Set `CHIMERA_PUBLIC_HOST` to an address reachable by Transiva. For example, if both are in Compose:

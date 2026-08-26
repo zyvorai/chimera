@@ -54,7 +54,7 @@ Rows reflect the real govmomi simulator inventory (name, power state, datastore)
 
 ### VMDK Library
 
-A dedicated card lists every `.vmdk` file found under `CHIMERA_FIXTURE_VMDK_DIR` (when configured), with its size and which VM (if any) it was assigned to — including files that matched no VM, which don't otherwise show up anywhere in the VM-keyed inventory table. See `docs/TRANSIVA.md`'s "Testing conversion, not just transfer" section for the directory-matching rules.
+A dedicated card lists every `.vmdk` file found under `CHIMERA_FIXTURE_VMDK_DIR` (when configured), with its size and which VM (if any) it was assigned to — including files that matched no VM, which don't otherwise show up anywhere in the VM-keyed inventory table. The directory is re-scanned automatically every 5 seconds, so adding or removing a file shows up here without restarting the server. See `docs/TRANSIVA.md`'s "Testing conversion, not just transfer" section for the directory-matching rules.
 
 ### Provider personas
 
