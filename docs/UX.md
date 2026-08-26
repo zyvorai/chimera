@@ -47,7 +47,14 @@ The inventory table supports:
 - power-state filter
 - pagination
 - CPU, memory, disk and datastore columns
+- a Fixture column showing whether each VM's export uses a real VMDK (`Matched`, `Round-robin`, `Shared`) or the default generated synthetic fixture (`Synthetic`), hover for the filename
 - export target selection/copy action
+
+Rows reflect the real govmomi simulator inventory (name, power state, datastore), not a fabricated count.
+
+### VMDK Library
+
+A dedicated card lists every `.vmdk` file found under `CHIMERA_FIXTURE_VMDK_DIR` (when configured), with its size and which VM (if any) it was assigned to — including files that matched no VM, which don't otherwise show up anywhere in the VM-keyed inventory table. See `docs/TRANSIVA.md`'s "Testing conversion, not just transfer" section for the directory-matching rules.
 
 ### Provider personas
 
@@ -82,7 +89,7 @@ The sidebar health ring derives a simple health score from current error rate an
 
 ## Authentication model
 
-The dashboard and read-only health/bootstrap/inventory/telemetry endpoints are public inside the disposable lab. Mutating controls require the admin bearer token printed by `chimera serve`.
+The dashboard and read-only health/bootstrap/inventory/telemetry/vmdks endpoints are public inside the disposable lab. Mutating controls require the admin bearer token printed by `chimera serve`.
 
 The browser stores the token only in `sessionStorage`, so it disappears when the browser session closes.
 
@@ -92,6 +99,7 @@ The browser stores the token only in `sessionStorage`, so it disappears when the
 GET  /__chimera/health
 GET  /__chimera/api/bootstrap
 GET  /__chimera/api/inventory
+GET  /__chimera/api/vmdks
 GET  /__chimera/api/telemetry
 GET  /__chimera/state
 POST /__chimera/faults

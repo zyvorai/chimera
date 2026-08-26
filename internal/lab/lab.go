@@ -54,6 +54,13 @@ func Start(ctx context.Context, cfg config.Config) (*Lab, error) {
 	if err := model.Create(); err != nil {
 		return nil, fmt.Errorf("create vCenter model: %w", err)
 	}
+	registry := model.Service.Context.Map
+	var vmNames []string
+	for _, e := range registry.All("VirtualMachine") {
+		if vm, ok := e.(*simulator.VirtualMachine); ok && vm.Name != "" {
+			vmNames = append(vmNames, vm.Name)
+		}
+	}
 
 	model.Service.RegisterEndpoints = true
 	model.Service.Listen = &url.URL{Host: "127.0.0.1:0", User: url.UserPassword(cfg.Username, cfg.Password)}
@@ -82,7 +89,7 @@ func Start(ctx context.Context, cfg config.Config) (*Lab, error) {
 	publicBase := scheme + "://" + host
 	publicURL, _ := url.Parse(publicBase + "/sdk")
 
-	fixtures, err := fixture.New(cfg.FixtureVMDK, cfg.FixtureSizeMB)
+	fixtures, err := fixture.New(cfg.FixtureVMDK, cfg.FixtureVMDKDir, cfg.FixtureSizeMB, vmNames)
 	if err != nil {
 		ln.Close()
 		backend.Close()
@@ -90,7 +97,6 @@ func Start(ctx context.Context, cfg config.Config) (*Lab, error) {
 		return nil, fmt.Errorf("prepare export fixture: %w", err)
 	}
 	shim := exportshim.New(fixtures, publicBase)
-	registry := model.Service.Context.Map
 	previousHandler := registry.Handler
 	registry.Handler = func(c *simulator.Context, m *simulator.Method) (mo.Reference, types.BaseMethodFault) {
 		h, fault := shim.Handler(c, m)
@@ -106,7 +112,7 @@ func Start(ctx context.Context, cfg config.Config) (*Lab, error) {
 	fs := faults.New()
 	hosts := cfg.Datacenters * (cfg.HostsPerDC + cfg.Clusters*cfg.HostsPerClus)
 	vmCount := cfg.Datacenters * max(1, cfg.Clusters) * cfg.VMsPerPool
-	gw := gateway.New(backend.URL, publicBase, cfg.AdminToken, fs, fixtures, gateway.Meta{
+	gw := gateway.New(backend.URL, publicBase, cfg.AdminToken, fs, fixtures, registry, gateway.Meta{
 		Version: "0.2.0", Persona: "vSphere", Username: cfg.Username, Datacenters: cfg.Datacenters,
 		Clusters: cfg.Datacenters * cfg.Clusters, Hosts: hosts, Datastores: cfg.Datacenters * cfg.Datastores,
 		VMs: vmCount, FixtureSizeMB: cfg.FixtureSizeMB, TLS: cfg.TLS,

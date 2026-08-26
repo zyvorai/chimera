@@ -1,12 +1,17 @@
 package gateway
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/vmware/govmomi/simulator"
 
 	"github.com/zyvorai/chimera/internal/faults"
 	"github.com/zyvorai/chimera/internal/fixture"
@@ -45,7 +50,7 @@ func TestNFCRangeShim(t *testing.T) {
 	}))
 	defer up.Close()
 	u, _ := url.Parse(up.URL)
-	g := New(u, "http://public.invalid", "", faults.New(), nil)
+	g := New(u, "http://public.invalid", "", faults.New(), nil, nil)
 	pub := httptest.NewServer(g)
 	defer pub.Close()
 
@@ -66,7 +71,7 @@ func TestNFCRangeShim(t *testing.T) {
 }
 
 func TestLocalNFCRange(t *testing.T) {
-	s, err := fixture.New("", 1)
+	s, err := fixture.New("", "", 1, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -80,7 +85,7 @@ func TestLocalNFCRange(t *testing.T) {
 	up := httptest.NewServer(http.NotFoundHandler())
 	defer up.Close()
 	u, _ := url.Parse(up.URL)
-	g := New(u, "http://public.invalid", "", faults.New(), s)
+	g := New(u, "http://public.invalid", "", faults.New(), s, nil)
 	pub := httptest.NewServer(g)
 	defer pub.Close()
 
@@ -115,7 +120,7 @@ func TestTelemetryTracksInfrastructureTraffic(t *testing.T) {
 	}))
 	defer up.Close()
 	u, _ := url.Parse(up.URL)
-	g := New(u, "http://public.invalid", "", faults.New(), nil)
+	g := New(u, "http://public.invalid", "", faults.New(), nil, nil)
 	pub := httptest.NewServer(g)
 	defer pub.Close()
 
@@ -145,7 +150,7 @@ func TestCommandCenterBootstrapAndAuth(t *testing.T) {
 	up := httptest.NewServer(http.NotFoundHandler())
 	defer up.Close()
 	u, _ := url.Parse(up.URL)
-	g := New(u, "http://chimera.test", "secret", faults.New(), nil, Meta{
+	g := New(u, "http://chimera.test", "secret", faults.New(), nil, nil, Meta{
 		Version: "test", Persona: "vSphere", Username: "administrator@vsphere.local",
 		Datacenters: 1, Clusters: 1, Hosts: 2, Datastores: 1, VMs: 4, FixtureSizeMB: 16,
 	})
@@ -190,5 +195,138 @@ func TestCommandCenterBootstrapAndAuth(t *testing.T) {
 	_ = res.Body.Close()
 	if res.StatusCode != http.StatusOK {
 		t.Fatalf("authenticated state status=%d", res.StatusCode)
+	}
+}
+
+// realVMModel builds a real govmomi simulator model (not the fake counts
+// this package used to fabricate inventory from) and returns its registry
+// plus the real VM names it created.
+func realVMModel(t *testing.T) (*simulator.Registry, []string) {
+	t.Helper()
+	model := simulator.VPX()
+	model.Machine = 2
+	if err := model.Create(); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(model.Remove)
+	registry := model.Service.Context.Map
+	var names []string
+	for _, e := range registry.All("VirtualMachine") {
+		if vm, ok := e.(*simulator.VirtualMachine); ok && vm.Name != "" {
+			names = append(names, vm.Name)
+		}
+	}
+	if len(names) == 0 {
+		t.Fatal("model produced no VMs")
+	}
+	return registry, names
+}
+
+func TestInventoryReflectsRealSimulatorVMs(t *testing.T) {
+	registry, vmNames := realVMModel(t)
+
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, vmNames[0]+".vmdk"), []byte("x"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	fixtures, err := fixture.New("", dir, 1, vmNames)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fixtures.Close()
+
+	up := httptest.NewServer(http.NotFoundHandler())
+	defer up.Close()
+	u, _ := url.Parse(up.URL)
+	g := New(u, "http://public.invalid", "", faults.New(), fixtures, registry)
+	pub := httptest.NewServer(g)
+	defer pub.Close()
+
+	res, err := http.Get(pub.URL + "/__chimera/api/inventory")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer res.Body.Close()
+	var got struct {
+		VirtualMachines []map[string]any `json:"virtual_machines"`
+		Total           int              `json:"total"`
+	}
+	if err := json.NewDecoder(res.Body).Decode(&got); err != nil {
+		t.Fatal(err)
+	}
+	if got.Total != len(vmNames) {
+		t.Fatalf("total=%d want=%d", got.Total, len(vmNames))
+	}
+	real := make(map[string]bool, len(vmNames))
+	for _, n := range vmNames {
+		real[n] = true
+	}
+	seenReal, matched := false, false
+	for _, vm := range got.VirtualMachines {
+		name, _ := vm["name"].(string)
+		if !real[name] {
+			t.Fatalf("inventory returned a name not in the real simulator model: %v", vm)
+		}
+		if name == vmNames[0] {
+			seenReal = true
+			if vm["fixture_source"] == "name-match" && vm["fixture_file"] == vmNames[0]+".vmdk" {
+				matched = true
+			}
+		}
+		switch vm["state"] {
+		case "poweredOn", "poweredOff", "suspended":
+		default:
+			t.Fatalf("unexpected state: %v", vm["state"])
+		}
+	}
+	if !seenReal {
+		t.Fatalf("expected VM %q in inventory, got %v", vmNames[0], got.VirtualMachines)
+	}
+	if !matched {
+		t.Fatalf("expected VM %q to have fixture_source=name-match", vmNames[0])
+	}
+}
+
+func TestVMDKsEndpoint(t *testing.T) {
+	registry, vmNames := realVMModel(t)
+
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, vmNames[0]+".vmdk"), []byte("x"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "unmatched-disk.vmdk"), []byte("y"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	fixtures, err := fixture.New("", dir, 1, vmNames)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fixtures.Close()
+
+	up := httptest.NewServer(http.NotFoundHandler())
+	defer up.Close()
+	u, _ := url.Parse(up.URL)
+	g := New(u, "http://public.invalid", "", faults.New(), fixtures, registry)
+	pub := httptest.NewServer(g)
+	defer pub.Close()
+
+	res, err := http.Get(pub.URL + "/__chimera/api/vmdks")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer res.Body.Close()
+	var got struct {
+		Total      int                  `json:"total"`
+		Matched    int                  `json:"matched"`
+		RoundRobin int                  `json:"round_robin"`
+		Unassigned int                  `json:"unassigned"`
+		Files      []fixture.Assignment `json:"files"`
+	}
+	if err := json.NewDecoder(res.Body).Decode(&got); err != nil {
+		t.Fatal(err)
+	}
+	// 2 VMs, 2 files: one matches by name, the leftover file/VM pair off via round-robin.
+	if got.Total != 2 || got.Matched != 1 || got.RoundRobin != 1 || got.Unassigned != 0 {
+		t.Fatalf("got total=%d matched=%d round_robin=%d unassigned=%d, want 2/1/1/0", got.Total, got.Matched, got.RoundRobin, got.Unassigned)
 	}
 }

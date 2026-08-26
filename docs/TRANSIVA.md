@@ -102,14 +102,23 @@ The scenario adds 750 ms request latency and caps NFC bandwidth to 2 MiB/s.
 
 By default, the exported `disk-0.vmdk` is deterministic test bytes. That validates Transiva through its download boundary but is not a valid disk format.
 
-For qemu-img/hyper2kvm/GuestKit tests, use a real disposable VMDK:
+For qemu-img/hyper2kvm/GuestKit tests, use a real disposable VMDK. Two modes are available:
+
+**Single shared file** — every VM's export lease serves the same file, which keeps conversion tests small and deterministic:
 
 ```bash
 export CHIMERA_FIXTURE_VMDK=/path/to/test.vmdk
 ./bin/chimera serve -listen 0.0.0.0:8989
 ```
 
-The same file is presented through every fake VM's export lease, which keeps conversion tests small and deterministic.
+**Directory of VMDKs, one per VM** — point at a directory instead, and each simulated VM gets a distinct file:
+
+```bash
+export CHIMERA_FIXTURE_VMDK_DIR=/path/to/vmdks
+./bin/chimera serve -listen 0.0.0.0:8989
+```
+
+Matching is two-pass: a file whose name (minus extension) matches a VM's name — e.g. `DC0_C0_RP0_VM0.vmdk` — is assigned to that VM; any leftover files and leftover VMs are then paired off in sorted order. VMs that still get nothing keep the default generated synthetic fixture. `CHIMERA_FIXTURE_VMDK` and `CHIMERA_FIXTURE_VMDK_DIR` are mutually exclusive. The directory is scanned once at startup — restart the server to pick up added/removed files. See the VMDK Library card and the Fixture column in the dashboard's Inventory table (`http://localhost:8989/__chimera/`) to see which VM got which file, and `GET /__chimera/api/vmdks` for the same data as JSON.
 
 ## Remote/container clients
 

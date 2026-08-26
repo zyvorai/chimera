@@ -14,5 +14,6 @@
   "soap_delay_ms": 0,
   "admin_token": "chimera-admin",
   "fixture_vmdk": "",
+  "fixture_vmdk_dir": "",
   "fixture_size_mb": 16
 }

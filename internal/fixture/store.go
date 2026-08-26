@@ -5,23 +5,56 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 )
 
 const defaultAlias = "disk-0.vmdk"
 
+// Fixture source methods, reported via Assignments/SourceFor.
+const (
+	MethodNameMatch  = "name-match"  // fixture_vmdk_dir file whose sanitized basename matched a VM's sanitized name
+	MethodRoundRobin = "round-robin" // fixture_vmdk_dir leftover file paired with a leftover VM in sorted order
+	MethodSharedFile = "shared-file" // single fixture_vmdk shared by every VM
+	MethodGenerated  = "generated"   // per-VM deterministic synthetic fixture
+	MethodUnassigned = "unassigned"  // fixture_vmdk_dir file that matched no VM
+)
+
+// Assignment describes one file found under fixture_vmdk_dir and, if any, the
+// VM it was matched to.
+type Assignment struct {
+	FileName  string `json:"file_name"`
+	Path      string `json:"-"`
+	SizeBytes int64  `json:"size_bytes"`
+	VMName    string `json:"vm_name"`
+	Method    string `json:"method"`
+}
+
 type Store struct {
 	mu          sync.RWMutex
 	dir         string
 	fixturePath string
+	fixtureDir  string
 	sizeMB      int
 	files       map[string]string
+
+	// byVM and assignments are built once in New() and never mutated
+	// afterward, so reads need no locking.
+	byVM        map[string]Assignment
+	assignments []Assignment
 }
 
-func New(fixturePath string, sizeMB int) (*Store, error) {
+// New constructs a fixture Store. fixturePath (a single shared VMDK) and
+// fixtureDir (a directory of VMDKs, one matched per VM) are mutually
+// exclusive. vmNames is the real, live list of simulated VM names, used to
+// match against fixtureDir's contents.
+func New(fixturePath, fixtureDir string, sizeMB int, vmNames []string) (*Store, error) {
 	if sizeMB < 1 {
 		sizeMB = 16
+	}
+	if fixturePath != "" && fixtureDir != "" {
+		return nil, fmt.Errorf("fixture_vmdk and fixture_vmdk_dir are mutually exclusive")
 	}
 	if fixturePath != "" {
 		abs, err := filepath.Abs(fixturePath)
@@ -37,11 +70,121 @@ func New(fixturePath string, sizeMB int) (*Store, error) {
 		}
 		fixturePath = abs
 	}
+
+	var byVM map[string]Assignment
+	var assignments []Assignment
+	if fixtureDir != "" {
+		abs, err := filepath.Abs(fixtureDir)
+		if err != nil {
+			return nil, err
+		}
+		st, err := os.Stat(abs)
+		if err != nil {
+			return nil, fmt.Errorf("fixture_vmdk_dir: %w", err)
+		}
+		if !st.IsDir() {
+			return nil, fmt.Errorf("fixture_vmdk_dir is not a directory: %s", abs)
+		}
+		fixtureDir = abs
+		byVM, assignments, err = scanFixtureDir(fixtureDir, vmNames)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	dir, err := os.MkdirTemp("", "chimera-fixtures-")
 	if err != nil {
 		return nil, err
 	}
-	return &Store{dir: dir, fixturePath: fixturePath, sizeMB: sizeMB, files: make(map[string]string)}, nil
+	return &Store{
+		dir: dir, fixturePath: fixturePath, fixtureDir: fixtureDir, sizeMB: sizeMB,
+		files: make(map[string]string), byVM: byVM, assignments: assignments,
+	}, nil
+}
+
+// scanFixtureDir lists dir's *.vmdk files and assigns each to a VM: first by
+// matching the file's sanitized basename to a VM's sanitized name, then by
+// pairing any leftover files with any leftover VMs in sorted order. Files
+// left unassigned (more files than unmatched VMs) stay MethodUnassigned;
+// VMs left unassigned (more VMs than unmatched files) are simply absent
+// from byVM, so Prepare falls back to the generated-fixture path for them.
+func scanFixtureDir(dir string, vmNames []string) (map[string]Assignment, []Assignment, error) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, nil, fmt.Errorf("fixture_vmdk_dir: %w", err)
+	}
+	type diskFile struct {
+		name string
+		path string
+		size int64
+	}
+	var files []diskFile
+	for _, e := range entries {
+		if e.IsDir() || !strings.EqualFold(filepath.Ext(e.Name()), ".vmdk") {
+			continue
+		}
+		info, err := e.Info()
+		if err != nil {
+			continue
+		}
+		files = append(files, diskFile{name: e.Name(), path: filepath.Join(dir, e.Name()), size: info.Size()})
+	}
+	sort.Slice(files, func(i, j int) bool { return files[i].name < files[j].name })
+
+	vmSorted := append([]string(nil), vmNames...)
+	sort.Strings(vmSorted)
+	vmByKey := make(map[string]string, len(vmSorted))
+	for _, vm := range vmSorted {
+		key := sanitize(vm)
+		if _, exists := vmByKey[key]; !exists {
+			vmByKey[key] = vm
+		}
+	}
+
+	result := make([]Assignment, len(files))
+	for i, f := range files {
+		result[i] = Assignment{FileName: f.name, Path: f.path, SizeBytes: f.size, Method: MethodUnassigned}
+	}
+	byVM := make(map[string]Assignment, len(vmSorted))
+	assignedVM := make(map[string]bool, len(vmSorted))
+
+	// Pass 1: filename match.
+	for i, f := range files {
+		base := strings.TrimSuffix(f.name, filepath.Ext(f.name))
+		key := sanitize(base)
+		if vm, ok := vmByKey[key]; ok && !assignedVM[key] {
+			a := Assignment{FileName: f.name, Path: f.path, SizeBytes: f.size, VMName: vm, Method: MethodNameMatch}
+			result[i] = a
+			byVM[key] = a
+			assignedVM[key] = true
+		}
+	}
+
+	// Pass 2: round robin over leftovers.
+	var leftoverFileIdx []int
+	for i := range files {
+		if result[i].Method == MethodUnassigned {
+			leftoverFileIdx = append(leftoverFileIdx, i)
+		}
+	}
+	var leftoverVMs []string
+	for _, vm := range vmSorted {
+		if !assignedVM[sanitize(vm)] {
+			leftoverVMs = append(leftoverVMs, vm)
+		}
+	}
+	n := min(len(leftoverVMs), len(leftoverFileIdx))
+	for i := range n {
+		idx := leftoverFileIdx[i]
+		vm := leftoverVMs[i]
+		key := sanitize(vm)
+		a := Assignment{FileName: files[idx].name, Path: files[idx].path, SizeBytes: files[idx].size, VMName: vm, Method: MethodRoundRobin}
+		result[idx] = a
+		byVM[key] = a
+		assignedVM[key] = true
+	}
+
+	return byVM, result, nil
 }
 
 func (s *Store) Close() error {
@@ -53,6 +196,36 @@ func (s *Store) Close() error {
 
 func (s *Store) Alias() string { return defaultAlias }
 
+// Directory returns the configured fixture_vmdk_dir, or "" if not configured.
+func (s *Store) Directory() string { return s.fixtureDir }
+
+// Assignments returns the file-centric view of the fixture_vmdk_dir scan,
+// sorted by file name. Empty/nil when directory mode isn't configured.
+func (s *Store) Assignments() []Assignment {
+	if s.assignments == nil {
+		return nil
+	}
+	out := make([]Assignment, len(s.assignments))
+	copy(out, s.assignments)
+	return out
+}
+
+// SourceFor reports how vmName's exported disk fixture is sourced: MethodSharedFile
+// (single fixture_vmdk for every VM), MethodNameMatch/MethodRoundRobin (a
+// fixture_vmdk_dir assignment), or MethodGenerated (per-VM synthetic fixture,
+// fileName "").
+func (s *Store) SourceFor(vmName string) (method, fileName string) {
+	if s.fixturePath != "" {
+		return MethodSharedFile, filepath.Base(s.fixturePath)
+	}
+	if s.fixtureDir != "" {
+		if a, ok := s.byVM[sanitize(vmName)]; ok {
+			return a.Method, a.FileName
+		}
+	}
+	return MethodGenerated, ""
+}
+
 func (s *Store) Prepare(vmName string) (string, int64, error) {
 	if s.fixturePath != "" {
 		st, err := os.Stat(s.fixturePath)
@@ -60,6 +233,17 @@ func (s *Store) Prepare(vmName string) (string, int64, error) {
 			return "", 0, err
 		}
 		return s.fixturePath, st.Size(), nil
+	}
+	if s.fixtureDir != "" {
+		if a, ok := s.byVM[sanitize(vmName)]; ok {
+			st, err := os.Stat(a.Path)
+			if err != nil {
+				return "", 0, err
+			}
+			return a.Path, st.Size(), nil
+		}
+		// No directory-mode assignment for this VM: fall through to the
+		// generated synthetic fixture below.
 	}
 
 	safe := sanitize(vmName)

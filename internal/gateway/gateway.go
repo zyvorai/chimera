@@ -11,9 +11,13 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/vmware/govmomi/simulator"
+	"github.com/vmware/govmomi/vim25/types"
 
 	"github.com/zyvorai/chimera/internal/faults"
 	"github.com/zyvorai/chimera/internal/fixture"
@@ -38,13 +42,14 @@ type Gateway struct {
 	proxy      *httputil.ReverseProxy
 	faults     *faults.State
 	fixtures   *fixture.Store
+	registry   *simulator.Registry
 	adminToken string
 	started    time.Time
 	meta       Meta
 	telemetry  *telemetry
 }
 
-func New(backend *url.URL, publicBase, adminToken string, fs *faults.State, fixtures *fixture.Store, meta ...Meta) *Gateway {
+func New(backend *url.URL, publicBase, adminToken string, fs *faults.State, fixtures *fixture.Store, registry *simulator.Registry, meta ...Meta) *Gateway {
 	target := &url.URL{Scheme: backend.Scheme, Host: backend.Host}
 	p := httputil.NewSingleHostReverseProxy(target)
 	original := p.ModifyResponse
@@ -77,7 +82,7 @@ func New(backend *url.URL, publicBase, adminToken string, fs *faults.State, fixt
 	if len(meta) > 0 {
 		m = meta[0]
 	}
-	return &Gateway{backend: backend, publicBase: publicBase, proxy: p, faults: fs, fixtures: fixtures, adminToken: adminToken, started: time.Now(), meta: m, telemetry: newTelemetry()}
+	return &Gateway{backend: backend, publicBase: publicBase, proxy: p, faults: fs, fixtures: fixtures, registry: registry, adminToken: adminToken, started: time.Now(), meta: m, telemetry: newTelemetry()}
 }
 
 func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -341,7 +346,8 @@ func (r *rateReader) Read(p []byte) (int, error) {
 func (g *Gateway) serveAdmin(w http.ResponseWriter, r *http.Request) {
 	public := r.URL.Path == "/__chimera" || r.URL.Path == "/__chimera/" ||
 		r.URL.Path == "/__chimera/health" || r.URL.Path == "/__chimera/api/bootstrap" ||
-		r.URL.Path == "/__chimera/api/inventory" || r.URL.Path == "/__chimera/api/telemetry"
+		r.URL.Path == "/__chimera/api/inventory" || r.URL.Path == "/__chimera/api/telemetry" ||
+		r.URL.Path == "/__chimera/api/vmdks"
 	if g.adminToken != "" && !public && r.Header.Get("Authorization") != "Bearer "+g.adminToken {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
@@ -363,6 +369,8 @@ func (g *Gateway) serveAdmin(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(g.inventory())
 	case r.URL.Path == "/__chimera/api/telemetry":
 		_ = json.NewEncoder(w).Encode(g.telemetry.snapshot())
+	case r.URL.Path == "/__chimera/api/vmdks":
+		_ = json.NewEncoder(w).Encode(g.vmdks())
 	case r.URL.Path == "/__chimera/state" && r.Method == http.MethodGet:
 		_ = json.NewEncoder(w).Encode(g.faults.Snapshot())
 	case r.URL.Path == "/__chimera/faults" && r.Method == http.MethodPost:
@@ -406,32 +414,99 @@ func (g *Gateway) bootstrap() map[string]any {
 		"product": "Chimera", "tagline": "One engine. Many infrastructure personalities.", "version": g.meta.Version,
 		"persona": g.meta.Persona, "username": g.meta.Username, "endpoint": g.publicBase + "/sdk", "public_base": g.publicBase,
 		"tls": g.meta.TLS, "datacenters": g.meta.Datacenters, "clusters": g.meta.Clusters, "hosts": g.meta.Hosts,
-		"datastores": g.meta.Datastores, "vms": g.meta.VMs, "fixture_size_mb": g.meta.FixtureSizeMB, "providers": providers,
+		"datastores": g.meta.Datastores, "vms": g.vmCount(), "fixture_size_mb": g.meta.FixtureSizeMB, "providers": providers,
 	}
 }
 
+// vmCount prefers the live simulator registry's real VM count, falling back
+// to the static Meta.VMs count when no registry is wired (e.g. in tests).
+func (g *Gateway) vmCount() int {
+	if g.registry != nil {
+		return len(g.registry.All("VirtualMachine"))
+	}
+	return g.meta.VMs
+}
+
 func (g *Gateway) inventory() map[string]any {
-	vms := make([]map[string]any, 0, g.meta.VMs)
-	for i := 0; i < g.meta.VMs; i++ {
-		state := "poweredOff"
-		if i%3 == 0 {
-			state = "poweredOn"
-		}
-		vms = append(vms, map[string]any{
-			"id": fmt.Sprintf("vm-%03d", i+1), "name": fmt.Sprintf("DC0_C0_RP0_VM%d", i), "state": state,
-			"cpu": 2 + (i%4)*2, "memory_gb": 4 + (i%4)*4, "disk_gb": 20 + i*10,
-			"datastore": fmt.Sprintf("LocalDS_%d", i%maxInt(1, g.meta.Datastores)), "network": "VM Network",
-			"exportable": true,
+	vms := make([]map[string]any, 0)
+	if g.registry != nil {
+		entities := g.registry.All("VirtualMachine")
+		sort.Slice(entities, func(i, j int) bool {
+			return entities[i].Entity().Name < entities[j].Entity().Name
 		})
+		for _, e := range entities {
+			vm, ok := e.(*simulator.VirtualMachine)
+			if !ok || vm.Name == "" {
+				continue
+			}
+			cpu, memGB, diskGB := vmHardware(vm)
+			source, file := "", ""
+			if g.fixtures != nil {
+				source, file = g.fixtures.SourceFor(vm.Name)
+			}
+			vms = append(vms, map[string]any{
+				"id": vm.Self.Value, "name": vm.Name, "state": string(vm.Runtime.PowerState),
+				"cpu": cpu, "memory_gb": memGB, "disk_gb": diskGB,
+				"datastore": g.datastoreName(vm), "network": "VM Network", "exportable": true,
+				"fixture_source": source, "fixture_file": file,
+			})
+		}
 	}
 	return map[string]any{"persona": g.meta.Persona, "virtual_machines": vms, "total": len(vms)}
 }
 
-func maxInt(a, b int) int {
-	if a > b {
-		return a
+func vmHardware(vm *simulator.VirtualMachine) (cpu int, memGB float64, diskGB int) {
+	if vm.Config == nil {
+		return 0, 0, 0
 	}
-	return b
+	hw := vm.Config.Hardware
+	cpu = int(hw.NumCPU)
+	memGB = float64(hw.MemoryMB) / 1024
+	var kb int64
+	for _, d := range hw.Device {
+		if disk, ok := d.(*types.VirtualDisk); ok {
+			kb += disk.CapacityInKB
+		}
+	}
+	diskGB = int(kb / (1024 * 1024))
+	return cpu, memGB, diskGB
+}
+
+func (g *Gateway) datastoreName(vm *simulator.VirtualMachine) string {
+	if g.registry == nil || len(vm.Datastore) == 0 {
+		return ""
+	}
+	if ds, ok := g.registry.Get(vm.Datastore[0]).(*simulator.Datastore); ok {
+		return ds.Name
+	}
+	return ""
+}
+
+func (g *Gateway) vmdks() map[string]any {
+	var list []fixture.Assignment
+	dir := ""
+	if g.fixtures != nil {
+		list = g.fixtures.Assignments()
+		dir = g.fixtures.Directory()
+	}
+	matched, robin, unassigned := 0, 0, 0
+	for _, a := range list {
+		switch a.Method {
+		case fixture.MethodNameMatch:
+			matched++
+		case fixture.MethodRoundRobin:
+			robin++
+		default:
+			unassigned++
+		}
+	}
+	if list == nil {
+		list = []fixture.Assignment{}
+	}
+	return map[string]any{
+		"directory": dir, "files": list, "total": len(list),
+		"matched": matched, "round_robin": robin, "unassigned": unassigned,
+	}
 }
 
 func LogPanicServer(s *http.Server, lnErr <-chan error) {

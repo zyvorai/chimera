@@ -83,7 +83,17 @@ make run
 ## Fixture modes
 
 51. Generated transport fixture is deterministic and has the configured byte size.
-52. Supplied real VMDK is served read-only through the lease alias.
-53. Multiple leases can reference the same real fixture independently.
+52. Supplied real VMDK (`fixture_vmdk`, single-file mode) is served read-only through the lease alias.
+53. Multiple leases can reference the same single-file real fixture independently (`fixture_vmdk` mode only).
 54. Completing/aborting a lease removes only that lease mapping.
 55. Conversion pipeline is run only with a valid VMDK fixture.
+
+## Directory-matched fixtures (`fixture_vmdk_dir`)
+
+56. A directory file whose sanitized basename matches a VM's sanitized name is assigned to that VM (`name-match`).
+57. Leftover files and leftover VMs are paired off in sorted order (`round-robin`).
+58. A VM with no directory-mode match still gets the existing generated synthetic fixture, unchanged.
+59. Setting `fixture_vmdk` and `fixture_vmdk_dir` together is rejected at config validation.
+60. Non-`.vmdk` files in the configured directory are ignored.
+61. `/__chimera/api/inventory` VM entries reflect the real simulator model's names/power states — the same names `ExportVm` operates on — not a fabricated count.
+62. `/__chimera/api/vmdks` lists every `.vmdk` file in the configured directory with its assignment method, including files that matched no VM.

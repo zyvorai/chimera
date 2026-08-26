@@ -13,5 +13,8 @@ services:
       CHIMERA_FIXTURE_SIZE_MB: "16"
       # To test with a real VMDK, mount it and uncomment:
       # CHIMERA_FIXTURE_VMDK: "/fixtures/sample.vmdk"
+      # To test with a directory of real VMDKs (one matched per VM by filename,
+      # remaining VMs round-robin the leftovers), mount it and uncomment:
+      # CHIMERA_FIXTURE_VMDK_DIR: "/fixtures"
     # volumes:
     #   - ./fixtures:/fixtures:ro
