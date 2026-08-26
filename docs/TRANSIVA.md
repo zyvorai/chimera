@@ -120,6 +120,8 @@ export CHIMERA_FIXTURE_VMDK_DIR=/path/to/vmdks
 
 Matching is two-pass: a file whose name (minus extension) matches a VM's name — e.g. `DC0_C0_RP0_VM0.vmdk` — is assigned to that VM; any leftover files and leftover VMs are then paired off in sorted order. VMs that still get nothing keep the default generated synthetic fixture. `CHIMERA_FIXTURE_VMDK` and `CHIMERA_FIXTURE_VMDK_DIR` are mutually exclusive. The directory is scanned once at startup — restart the server to pick up added/removed files. See the VMDK Library card and the Fixture column in the dashboard's Inventory table (`http://localhost:8989/__chimera/`) to see which VM got which file, and `GET /__chimera/api/vmdks` for the same data as JSON.
 
+Don't have a real VMDK handy? `make fixtures` (`scripts/fetch-sample-fixtures.sh`) fetches a small, official, checksummed Alpine Linux cloud image and converts it to VMDK automatically — so the export path serves a genuinely real, valid disk image out of the box instead of the generated filler bytes. `scripts/verify-real-fixture.sh` proves this end-to-end: it downloads the *complete* exported disk (via `chimera selftest -vm <name> -save <path>`, not just the default 4KB probe) and confirms `qemu-img info` recognizes it as a valid image.
+
 ## Remote/container clients
 
 Set `CHIMERA_PUBLIC_HOST` to an address reachable by Transiva. For example, if both are in Compose:

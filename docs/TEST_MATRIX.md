@@ -97,3 +97,4 @@ make run
 60. Non-`.vmdk` files in the configured directory are ignored.
 61. `/__chimera/api/inventory` VM entries reflect the real simulator model's names/power states — the same names `ExportVm` operates on — not a fabricated count.
 62. `/__chimera/api/vmdks` lists every `.vmdk` file in the configured directory with its assignment method, including files that matched no VM.
+63. A real fixture image fetched via `make fixtures` round-trips through `qemu-img info` as a valid disk image, confirmed via `scripts/verify-real-fixture.sh` (downloads the complete export via `chimera selftest -vm <name> -save <path>`, not just the default 4KB probe).

@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"time"
 
 	"github.com/vmware/govmomi"
@@ -19,7 +20,12 @@ type Result struct {
 	BytesRead  int64
 }
 
-func Run(ctx context.Context, endpoint, username, password string, insecure bool) (*Result, error) {
+// Run performs the standard login/inventory/export/NFC-read probe. If vmName
+// is non-empty, that specific VM is targeted instead of the first one found
+// (useful to target a VM known to have a real fixture assigned). If savePath
+// is non-empty, the full NFC stream is written there instead of only reading
+// the first 4KB — BytesRead then reflects the complete download.
+func Run(ctx context.Context, endpoint, username, password string, insecure bool, vmName, savePath string) (*Result, error) {
 	u, err := url.Parse(endpoint)
 	if err != nil {
 		return nil, err
@@ -37,7 +43,12 @@ func Run(ctx context.Context, endpoint, username, password string, insecure bool
 		return nil, fmt.Errorf("datacenter list: %w", err)
 	}
 	f.SetDatacenter(dcs[0])
-	vms, err := f.VirtualMachineList(ctx, "*")
+
+	pattern := "*"
+	if vmName != "" {
+		pattern = vmName
+	}
+	vms, err := f.VirtualMachineList(ctx, pattern)
 	if err != nil || len(vms) == 0 {
 		return nil, fmt.Errorf("vm list: %w", err)
 	}
@@ -59,8 +70,21 @@ func Run(ctx context.Context, endpoint, username, password string, insecure bool
 			if res.StatusCode != 200 && res.StatusCode != 206 {
 				return fmt.Errorf("nfc http %s", res.Status)
 			}
-			n, e := io.CopyN(io.Discard, res.Body, 4096)
-			if e != nil && e != io.EOF {
+			if savePath == "" {
+				n, e := io.CopyN(io.Discard, res.Body, 4096)
+				if e != nil && e != io.EOF {
+					return e
+				}
+				read = n
+				return nil
+			}
+			out, e := os.Create(savePath)
+			if e != nil {
+				return e
+			}
+			defer out.Close()
+			n, e := io.Copy(out, res.Body)
+			if e != nil {
 				return e
 			}
 			read = n

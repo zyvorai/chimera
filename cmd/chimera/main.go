@@ -73,10 +73,12 @@ func runSelftest(args []string) {
 	user := fs.String("user", "administrator@vsphere.local", "username")
 	pass := fs.String("pass", "vmware", "password")
 	insecure := fs.Bool("insecure", true, "skip TLS verification")
+	vm := fs.String("vm", "", "target a specific VM by name instead of the first one found")
+	save := fs.String("save", "", "write the full exported disk to this path instead of only reading 4KB")
 	_ = fs.Parse(args)
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
-	r, err := selftest.Run(ctx, *endpoint, *user, *pass, *insecure)
+	r, err := selftest.Run(ctx, *endpoint, *user, *pass, *insecure, *vm, *save)
 	if err != nil {
 		log.Fatal(err)
 	}

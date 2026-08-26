@@ -16,5 +16,7 @@ services:
       # To test with a directory of real VMDKs (one matched per VM by filename,
       # remaining VMs round-robin the leftovers), mount it and uncomment:
       # CHIMERA_FIXTURE_VMDK_DIR: "/fixtures"
+      # Don't have real VMDKs handy? Run `make fixtures` first (fetches a
+      # small official Alpine cloud image) to populate ./fixtures.
     # volumes:
     #   - ./fixtures:/fixtures:ro

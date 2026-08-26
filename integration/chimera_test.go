@@ -34,7 +34,7 @@ func TestLoginInventoryExportAndNFC(t *testing.T) {
 
 	testCtx, testCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer testCancel()
-	got, err := selftest.Run(testCtx, l.URL.String(), cfg.Username, cfg.Password, true)
+	got, err := selftest.Run(testCtx, l.URL.String(), cfg.Username, cfg.Password, true, "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,7 +62,7 @@ func TestBadPasswordRejected(t *testing.T) {
 
 	testCtx, testCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer testCancel()
-	if _, err := selftest.Run(testCtx, l.URL.String(), cfg.Username, "definitely-wrong", true); err == nil {
+	if _, err := selftest.Run(testCtx, l.URL.String(), cfg.Username, "definitely-wrong", true, "", ""); err == nil {
 		t.Fatal("expected invalid login")
 	}
 }

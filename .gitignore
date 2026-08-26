@@ -1,8 +1,10 @@
 /bin/
 /dist/
+/fixtures/
 *.test
 *.out
 coverage.txt
 .DS_Store
+.claude/
 transiva-chimera.yaml
 .deploy-last

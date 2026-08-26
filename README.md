@@ -126,7 +126,7 @@ Run the end-to-end client probe:
   -pass vmware
 ```
 
-The self-test performs login → datacenter discovery → VM inventory → `ExportVm` → lease wait → NFC read → lease complete.
+The self-test performs login → datacenter discovery → VM inventory → `ExportVm` → lease wait → NFC read → lease complete. By default it only reads the first 4KB; pass `-vm <name>` to target a specific VM and `-save <path>` to download the complete disk instead (see `scripts/verify-real-fixture.sh` for a full worked example against a real fixture).
 
 ## Docker
 
@@ -177,6 +177,15 @@ CHIMERA_FIXTURE_VMDK_DIR=/lab/fixtures \
 ```
 
 Matching is two-pass: a file named after a VM (e.g. `DC0_C0_RP0_VM0.vmdk`) is assigned to that VM; any leftover files and VMs are then paired off in sorted order. VMs that still get nothing keep the default generated fixture. Mutually exclusive with `fixture_vmdk`. See the VMDK Library panel in the Command Center, or `GET /__chimera/api/vmdks`, to see the resulting assignment.
+
+Don't have a real VMDK handy? `make fixtures` fetches a small, official, checksummed Alpine Linux cloud image and converts it to VMDK automatically (see `scripts/fetch-sample-fixtures.sh`):
+
+```bash
+make fixtures
+CHIMERA_FIXTURE_VMDK_DIR=./fixtures ./bin/chimera serve -listen 0.0.0.0:8989
+```
+
+`scripts/verify-real-fixture.sh` proves the whole path end-to-end: it exports the assigned VM's disk through the real NFC download (not just `selftest`'s 4KB probe) and confirms `qemu-img info` recognizes the result as a valid disk image.
 
 ## Configuration
 

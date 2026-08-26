@@ -1,4 +1,4 @@
-.PHONY: build test vet verify fmt run docker transiva-config package
+.PHONY: build test vet verify fmt run docker transiva-config package fixtures
 
 build:
 	go build -o bin/chimera ./cmd/chimera
@@ -27,3 +27,6 @@ transiva-config:
 
 package:
 	./scripts/package.sh
+
+fixtures:
+	./scripts/fetch-sample-fixtures.sh
