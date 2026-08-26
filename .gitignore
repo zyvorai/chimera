@@ -4,3 +4,4 @@
 coverage.txt
 .DS_Store
 transiva-chimera.yaml
+.deploy-last

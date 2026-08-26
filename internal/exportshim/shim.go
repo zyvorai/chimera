@@ -26,6 +26,14 @@ func New(store *fixture.Store, publicBase string) *Shim {
 
 // Handler plugs the two export operations Transiva needs into govmomi's
 // simulator inventory: OvfManager.CreateDescriptor and VirtualMachine.ExportVm.
+//
+// Returning a handler here isn't enough on its own: for a VirtualMachine ref,
+// simulator.Service.call re-resolves the handler via Session.Get right after
+// this hook runs, and Session.Get falls back to the shared Registry (the real
+// *simulator.VirtualMachine), silently discarding whatever this hook returned.
+// Putting the override into the session's own registry (ctx.Session.Put) makes
+// Session.Get find it first. vmHandler embeds the real object so every other
+// VM method keeps working unchanged; only ExportVm is overridden.
 func (s *Shim) Handler(ctx *simulator.Context, m *simulator.Method) (mo.Reference, types.BaseMethodFault) {
 	switch m.Name {
 	case "CreateDescriptor":
@@ -34,7 +42,15 @@ func (s *Shim) Handler(ctx *simulator.Context, m *simulator.Method) (mo.Referenc
 		}
 	case "ExportVm":
 		if m.This.Type == "VirtualMachine" {
-			return &vmHandler{shim: s, ref: m.This}, nil
+			vm, ok := ctx.Map.Get(m.This).(*simulator.VirtualMachine)
+			if !ok {
+				return nil, nil
+			}
+			h := &vmHandler{VirtualMachine: vm, shim: s}
+			if ctx.Session != nil {
+				ctx.Session.Put(h)
+			}
+			return h, nil
 		}
 	}
 	return nil, nil
@@ -61,14 +77,13 @@ func (h *ovfHandler) CreateDescriptor(ctx *simulator.Context, req *types.CreateD
 }
 
 type vmHandler struct {
+	*simulator.VirtualMachine
 	shim *Shim
-	ref  types.ManagedObjectReference
 }
 
-func (h *vmHandler) Reference() types.ManagedObjectReference { return h.ref }
-
 func (h *vmHandler) ExportVm(ctx *simulator.Context, _ *types.ExportVm) soap.HasFault {
-	name := entityName(ctx, h.ref)
+	ref := h.Reference()
+	name := entityName(ctx, ref)
 	filePath, size, err := h.shim.Store.Prepare(name)
 	if err != nil {
 		return &methods.ExportVmBody{Fault_: simulator.Fault(err.Error(), &types.FileFault{})}
@@ -77,16 +92,16 @@ func (h *vmHandler) ExportVm(ctx *simulator.Context, _ *types.ExportVm) soap.Has
 	lease := &leaseHandler{shim: h.shim}
 	lease.State = types.HttpNfcLeaseStateReady
 	ctx.Session.Put(lease)
-	ref := lease.Reference()
+	leaseRef := lease.Reference()
 	alias := h.shim.Store.Alias()
-	h.shim.Store.Register(ref.Value, alias, filePath)
+	h.shim.Store.Register(leaseRef.Value, alias, filePath)
 
-	u := h.shim.PublicBase + "/chimera-nfc/" + path.Join(ref.Value, alias)
+	u := h.shim.PublicBase + "/chimera-nfc/" + path.Join(leaseRef.Value, alias)
 	lease.Info = &types.HttpNfcLeaseInfo{
-		Lease:  ref,
-		Entity: h.ref,
+		Lease:  leaseRef,
+		Entity: ref,
 		DeviceUrl: []types.HttpNfcLeaseDeviceUrl{{
-			Key:           fmt.Sprintf("/%s/disk/0", h.ref.Value),
+			Key:           fmt.Sprintf("/%s/disk/0", ref.Value),
 			Url:           u,
 			SslThumbprint: "",
 			Disk:          types.NewBool(true),
@@ -98,7 +113,7 @@ func (h *vmHandler) ExportVm(ctx *simulator.Context, _ *types.ExportVm) soap.Has
 		TotalDiskCapacityInKB: size / 1024,
 	}
 
-	return &methods.ExportVmBody{Res: &types.ExportVmResponse{Returnval: ref}}
+	return &methods.ExportVmBody{Res: &types.ExportVmResponse{Returnval: leaseRef}}
 }
 
 type leaseHandler struct {
