@@ -28,7 +28,7 @@ Use this matrix as the acceptance suite for Transiva's vSphere provider.
 
 ## OVF and export lease
 
-19. `OvfManager.CreateDescriptor` returns a descriptor.
+19. `OvfManager.CreateDescriptor` returns a descriptor, including when called on a real authenticated session before `VirtualMachine.Export` (Transiva's actual sequence) — `integration/chimera_test.go`'s `TestCreateDescriptorThenExportVm`.
 20. `VirtualMachine.Export` returns an HTTP NFC lease.
 21. Lease is observable in ready state through the property collector.
 22. Lease contains at least one downloadable item.

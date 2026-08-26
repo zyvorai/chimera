@@ -32,13 +32,30 @@ func New(store *fixture.Store, publicBase string) *Shim {
 // this hook runs, and Session.Get falls back to the shared Registry (the real
 // *simulator.VirtualMachine), silently discarding whatever this hook returned.
 // Putting the override into the session's own registry (ctx.Session.Put) makes
-// Session.Get find it first. vmHandler embeds the real object so every other
-// VM method keeps working unchanged; only ExportVm is overridden.
+// Session.Get find it first. Both handlers embed their real object so every
+// other method on it keeps working unchanged; only CreateDescriptor/ExportVm
+// are overridden.
+//
+// The CreateDescriptor case was originally left unfixed on the assumption
+// that govmomi's simulator doesn't pre-register a real OvfManager, so there
+// was nothing for Session.Get to fall back to. That assumption was wrong: a
+// real client that calls OvfManager.CreateDescriptor before VirtualMachine.
+// Export (Transiva's actual code path, via hyperexport) hits the exact same
+// clobbering bug, failing with "OvfManager:OvfManager does not implement:
+// CreateDescriptor" — proving govmomi does register one.
 func (s *Shim) Handler(ctx *simulator.Context, m *simulator.Method) (mo.Reference, types.BaseMethodFault) {
 	switch m.Name {
 	case "CreateDescriptor":
 		if m.This.Type == "OvfManager" {
-			return &ovfHandler{shim: s, ref: m.This}, nil
+			mgr, ok := ctx.Map.Get(m.This).(*simulator.OvfManager)
+			if !ok {
+				return nil, nil
+			}
+			h := &ovfHandler{OvfManager: mgr, shim: s}
+			if ctx.Session != nil {
+				ctx.Session.Put(h)
+			}
+			return h, nil
 		}
 	case "ExportVm":
 		if m.This.Type == "VirtualMachine" {
@@ -57,11 +74,9 @@ func (s *Shim) Handler(ctx *simulator.Context, m *simulator.Method) (mo.Referenc
 }
 
 type ovfHandler struct {
+	*simulator.OvfManager
 	shim *Shim
-	ref  types.ManagedObjectReference
 }
-
-func (h *ovfHandler) Reference() types.ManagedObjectReference { return h.ref }
 
 func (h *ovfHandler) CreateDescriptor(ctx *simulator.Context, req *types.CreateDescriptor) soap.HasFault {
 	name := entityName(ctx, req.Obj)
