@@ -8,9 +8,15 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 )
 
 const defaultAlias = "disk-0.vmdk"
+
+// fixtureDirPollInterval is how often fixture_vmdk_dir is re-scanned for
+// added/removed/renamed files, so an operator can drop in a new VMDK without
+// restarting the server.
+const fixtureDirPollInterval = 5 * time.Second
 
 // Fixture source methods, reported via Assignments/SourceFor.
 const (
@@ -36,13 +42,16 @@ type Store struct {
 	dir         string
 	fixturePath string
 	fixtureDir  string
+	vmNames     []string
 	sizeMB      int
 	files       map[string]string
 
-	// byVM and assignments are built once in New() and never mutated
-	// afterward, so reads need no locking.
+	// byVM and assignments are re-built by Rescan (initially, then on a
+	// timer if fixtureDir is set) — reads/writes go through mu.
 	byVM        map[string]Assignment
 	assignments []Assignment
+
+	stopPoll chan struct{}
 }
 
 // New constructs a fixture Store. fixturePath (a single shared VMDK) and
@@ -71,8 +80,6 @@ func New(fixturePath, fixtureDir string, sizeMB int, vmNames []string) (*Store, 
 		fixturePath = abs
 	}
 
-	var byVM map[string]Assignment
-	var assignments []Assignment
 	if fixtureDir != "" {
 		abs, err := filepath.Abs(fixtureDir)
 		if err != nil {
@@ -86,20 +93,56 @@ func New(fixturePath, fixtureDir string, sizeMB int, vmNames []string) (*Store, 
 			return nil, fmt.Errorf("fixture_vmdk_dir is not a directory: %s", abs)
 		}
 		fixtureDir = abs
-		byVM, assignments, err = scanFixtureDir(fixtureDir, vmNames)
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	dir, err := os.MkdirTemp("", "chimera-fixtures-")
 	if err != nil {
 		return nil, err
 	}
-	return &Store{
-		dir: dir, fixturePath: fixturePath, fixtureDir: fixtureDir, sizeMB: sizeMB,
-		files: make(map[string]string), byVM: byVM, assignments: assignments,
-	}, nil
+	s := &Store{
+		dir: dir, fixturePath: fixturePath, fixtureDir: fixtureDir,
+		vmNames: append([]string(nil), vmNames...), sizeMB: sizeMB,
+		files: make(map[string]string), stopPoll: make(chan struct{}),
+	}
+	if fixtureDir != "" {
+		if err := s.Rescan(); err != nil {
+			return nil, err
+		}
+		go s.pollFixtureDir()
+	}
+	return s, nil
+}
+
+// Rescan re-scans fixture_vmdk_dir and updates the VM/file assignment. It is
+// called once synchronously in New(), then periodically by pollFixtureDir so
+// an operator can drop in a new VMDK without restarting the server. It is a
+// no-op error if fixture_vmdk_dir isn't configured.
+func (s *Store) Rescan() error {
+	if s.fixtureDir == "" {
+		return fmt.Errorf("fixture_vmdk_dir is not configured")
+	}
+	byVM, assignments, err := scanFixtureDir(s.fixtureDir, s.vmNames)
+	if err != nil {
+		return err
+	}
+	s.mu.Lock()
+	s.byVM = byVM
+	s.assignments = assignments
+	s.mu.Unlock()
+	return nil
+}
+
+func (s *Store) pollFixtureDir() {
+	ticker := time.NewTicker(fixtureDirPollInterval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			_ = s.Rescan() // best-effort: a transient read error just keeps the prior assignment
+		case <-s.stopPoll:
+			return
+		}
+	}
 }
 
 // scanFixtureDir lists dir's *.vmdk files and assigns each to a VM: first by
@@ -188,6 +231,9 @@ func scanFixtureDir(dir string, vmNames []string) (map[string]Assignment, []Assi
 }
 
 func (s *Store) Close() error {
+	if s.fixtureDir != "" {
+		close(s.stopPoll)
+	}
 	if s.dir == "" {
 		return nil
 	}
@@ -202,6 +248,8 @@ func (s *Store) Directory() string { return s.fixtureDir }
 // Assignments returns the file-centric view of the fixture_vmdk_dir scan,
 // sorted by file name. Empty/nil when directory mode isn't configured.
 func (s *Store) Assignments() []Assignment {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	if s.assignments == nil {
 		return nil
 	}
@@ -219,7 +267,10 @@ func (s *Store) SourceFor(vmName string) (method, fileName string) {
 		return MethodSharedFile, filepath.Base(s.fixturePath)
 	}
 	if s.fixtureDir != "" {
-		if a, ok := s.byVM[sanitize(vmName)]; ok {
+		s.mu.RLock()
+		a, ok := s.byVM[sanitize(vmName)]
+		s.mu.RUnlock()
+		if ok {
 			return a.Method, a.FileName
 		}
 	}
@@ -235,7 +286,10 @@ func (s *Store) Prepare(vmName string) (string, int64, error) {
 		return s.fixturePath, st.Size(), nil
 	}
 	if s.fixtureDir != "" {
-		if a, ok := s.byVM[sanitize(vmName)]; ok {
+		s.mu.RLock()
+		a, ok := s.byVM[sanitize(vmName)]
+		s.mu.RUnlock()
+		if ok {
 			st, err := os.Stat(a.Path)
 			if err != nil {
 				return "", 0, err

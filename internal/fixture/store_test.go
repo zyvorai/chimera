@@ -129,6 +129,54 @@ func TestDirectoryFixtureIgnoresNonVMDKFiles(t *testing.T) {
 	}
 }
 
+func TestDirectoryFixturePicksUpNewFileOnRescan(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, filepath.Join(dir, "DC0_H0_VM0.vmdk"), 111)
+
+	s, err := New("", dir, 1, []string{"DC0_H0_VM0", "DC0_H0_VM1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+
+	if method, _ := s.SourceFor("DC0_H0_VM1"); method != MethodGenerated {
+		t.Fatalf("before adding a file, SourceFor(VM1)=%q, want generated", method)
+	}
+
+	// Drop in a new file after construction, matching the second VM by name.
+	writeFile(t, filepath.Join(dir, "DC0_H0_VM1.vmdk"), 222)
+
+	// Without an explicit Rescan, the old assignment should still hold.
+	if method, _ := s.SourceFor("DC0_H0_VM1"); method != MethodGenerated {
+		t.Fatalf("immediately after adding a file (no rescan yet), SourceFor(VM1)=%q, want still generated", method)
+	}
+
+	if err := s.Rescan(); err != nil {
+		t.Fatal(err)
+	}
+	if method, file := s.SourceFor("DC0_H0_VM1"); method != MethodNameMatch || file != "DC0_H0_VM1.vmdk" {
+		t.Fatalf("after Rescan, SourceFor(VM1)=%q/%q, want name-match/DC0_H0_VM1.vmdk", method, file)
+	}
+	p, n, err := s.Prepare("DC0_H0_VM1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if filepath.Base(p) != "DC0_H0_VM1.vmdk" || n != 222 {
+		t.Fatalf("p=%q n=%d, want DC0_H0_VM1.vmdk/222", p, n)
+	}
+}
+
+func TestRescanErrorsWithoutFixtureDir(t *testing.T) {
+	s, err := New("", "", 1, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+	if err := s.Rescan(); err == nil {
+		t.Fatal("expected Rescan to error when fixture_vmdk_dir isn't configured")
+	}
+}
+
 func writeFile(t *testing.T, path string, size int) {
 	t.Helper()
 	if err := os.WriteFile(path, make([]byte, size), 0600); err != nil {
