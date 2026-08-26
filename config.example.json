@@ -1,0 +1,18 @@
+{
+  "listen": "0.0.0.0:8989",
+  "public_host": "localhost:8989",
+  "tls": false,
+  "username": "administrator@vsphere.local",
+  "password": "vmware",
+  "datacenters": 1,
+  "clusters": 1,
+  "hosts_per_dc": 0,
+  "hosts_per_cluster": 1,
+  "datastores": 1,
+  "vms_per_pool": 4,
+  "autostart_vms": false,
+  "soap_delay_ms": 0,
+  "admin_token": "chimera-admin",
+  "fixture_vmdk": "",
+  "fixture_size_mb": 16
+}

@@ -1,0 +1,17 @@
+services:
+  chimera:
+    build: .
+    ports:
+      - "8989:8989"
+    environment:
+      CHIMERA_LISTEN: "0.0.0.0:8989"
+      CHIMERA_PUBLIC_HOST: "localhost:8989"
+      CHIMERA_USERNAME: "administrator@vsphere.local"
+      CHIMERA_PASSWORD: "vmware"
+      CHIMERA_ADMIN_TOKEN: "chimera-admin"
+      CHIMERA_VMS_PER_POOL: "4"
+      CHIMERA_FIXTURE_SIZE_MB: "16"
+      # To test with a real VMDK, mount it and uncomment:
+      # CHIMERA_FIXTURE_VMDK: "/fixtures/sample.vmdk"
+    # volumes:
+    #   - ./fixtures:/fixtures:ro
