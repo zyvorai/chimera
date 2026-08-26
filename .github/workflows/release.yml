@@ -1,0 +1,29 @@
+name: release
+on:
+  push:
+    tags:
+      - "v*"
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.x"
+          cache: true
+      - name: Install nfpm
+        run: go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
+      - name: Build packages
+        run: |
+          export PATH="$(go env GOPATH)/bin:$PATH"
+          VERSION="${GITHUB_REF_NAME#v}" ./scripts/package.sh
+      - name: Checksums
+        working-directory: dist
+        run: |
+          rm -rf build
+          sha256sum * > checksums.txt
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true

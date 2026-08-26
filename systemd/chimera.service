@@ -1,0 +1,18 @@
+[Unit]
+Description=Chimera infrastructure endpoint simulator
+Documentation=https://github.com/zyvorai/chimera
+After=network.target
+
+[Service]
+Type=simple
+EnvironmentFile=-/etc/chimera/chimera.env
+ExecStart=/usr/bin/chimera serve
+Restart=on-failure
+RestartSec=5s
+DynamicUser=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+
+[Install]
+WantedBy=multi-user.target

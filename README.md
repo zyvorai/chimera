@@ -1,5 +1,9 @@
 # Chimera
 
+[![CI](https://github.com/zyvorai/chimera/actions/workflows/ci.yml/badge.svg)](https://github.com/zyvorai/chimera/actions/workflows/ci.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/zyvorai/chimera.svg)](https://pkg.go.dev/github.com/zyvorai/chimera)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+
 **Chimera** is a programmable infrastructure simulation engine for integration-testing migration, discovery, export and automation software without provisioning the real infrastructure platform.
 
 The architecture is provider-persona based: **vSphere is the first fully implemented persona**, while the control plane and UX are designed to grow into Nutanix Prism, Proxmox VE, OpenStack, Hyper-V and cloud/API personalities.
@@ -66,6 +70,22 @@ The future-provider contract is documented in [`docs/PROVIDER_ARCHITECTURE.md`](
 ## Why this matches Transiva
 
 Transiva's vSphere provider uses govmomi for normal login and inventory. Its export flow creates an OVF descriptor, calls `vm.Export()`, waits for the lease, and downloads each lease item. When a partial local file exists, Transiva sends `Range: bytes=N-`. Chimera implements those exact boundaries so Transiva can exercise its production code path without requiring a physical vCenter.
+
+## Install
+
+**Prebuilt packages** (Linux amd64/arm64): grab the `.deb` or `.rpm` from the [latest release](https://github.com/zyvorai/chimera/releases/latest), then:
+
+```bash
+sudo apt install ./chimera_*.deb   # Debian/Ubuntu
+sudo dnf install ./chimera-*.rpm   # Fedora/RHEL/Alma
+sudo systemctl enable --now chimera
+```
+
+This installs the binary to `/usr/bin/chimera`, a systemd unit (`systemd/chimera.service`), and an env file at `/etc/chimera/chimera.env`.
+
+**Remote host, from source**: `./scripts/deploy-remote.sh <host> [user]` cross-compiles and installs Chimera as a systemd service over SSH — no Go toolchain needed on the target. See `--help` for options.
+
+**Build packages yourself**: `make package` (needs [nfpm](https://nfpm.goreleaser.com)) builds `.deb`/`.rpm` into `dist/` from `packaging/nfpm.yaml`.
 
 ## Quick start
 
@@ -147,6 +167,17 @@ CHIMERA_FIXTURE_VMDK=/lab/fixtures/ubuntu-test.vmdk \
 
 Chimera never modifies the supplied fixture.
 
+### Directory of VMDKs, one per VM
+
+Point at a directory instead of a single file to give each simulated VM its own disk:
+
+```bash
+CHIMERA_FIXTURE_VMDK_DIR=/lab/fixtures \
+./bin/chimera serve -listen 0.0.0.0:8989
+```
+
+Matching is two-pass: a file named after a VM (e.g. `DC0_C0_RP0_VM0.vmdk`) is assigned to that VM; any leftover files and VMs are then paired off in sorted order. VMs that still get nothing keep the default generated fixture. Mutually exclusive with `fixture_vmdk`. See the VMDK Library panel in the Command Center, or `GET /__chimera/api/vmdks`, to see the resulting assignment.
+
 ## Configuration
 
 | JSON | Environment | Default |
@@ -165,6 +196,7 @@ Chimera never modifies the supplied fixture.
 | `soap_delay_ms` | `CHIMERA_SOAP_DELAY_MS` | `0` |
 | `admin_token` | `CHIMERA_ADMIN_TOKEN` | `chimera-admin` |
 | `fixture_vmdk` | `CHIMERA_FIXTURE_VMDK` | generated fixture |
+| `fixture_vmdk_dir` | `CHIMERA_FIXTURE_VMDK_DIR` | generated fixture |
 | `fixture_size_mb` | `CHIMERA_FIXTURE_SIZE_MB` | `16` |
 
 ## Admin APIs
@@ -175,6 +207,7 @@ Public read endpoints:
 GET /__chimera/health
 GET /__chimera/api/bootstrap
 GET /__chimera/api/inventory
+GET /__chimera/api/vmdks
 GET /__chimera/api/telemetry
 ```
 
@@ -276,8 +309,10 @@ internal/faults/         deterministic scenario state
 internal/selftest/       govmomi end-to-end probe
 integration/             compatibility tests
 docs/                    UX, architecture, Transiva guide, test matrix
-scripts/                 config, scenario and smoke helpers
-.github/workflows/       CI
+scripts/                 config, scenario, smoke, deploy and packaging helpers
+systemd/                 systemd unit (used by packages and deploy-remote.sh)
+packaging/               nfpm config for .deb/.rpm builds
+.github/workflows/       CI + tagged-release packaging
 ```
 
 ## Testing
@@ -299,14 +334,10 @@ make run
 
 See [`docs/TEST_MATRIX.md`](docs/TEST_MATRIX.md) for the acceptance matrix.
 
-## Repository
+## Contributing
 
-Recommended repository:
+Issues and PRs are welcome. `make verify` runs the same checks as CI (build, vet, tests, `gofmt`, and a syntax check on the embedded dashboard JS) — run it before opening a PR.
 
-```text
-github.com/zyvorai/chimera
-```
+## License
 
-Recommended description:
-
-> Multi-platform infrastructure simulation engine for testing discovery, migration, export, API compatibility, retries and failure handling without real infrastructure.
+Apache License 2.0 — see [`LICENSE`](LICENSE). Third-party dependencies are listed in [`THIRD_PARTY.md`](THIRD_PARTY.md).

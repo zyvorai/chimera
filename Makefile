@@ -1,4 +1,4 @@
-.PHONY: build test vet verify fmt run docker transiva-config
+.PHONY: build test vet verify fmt run docker transiva-config package
 
 build:
 	go build -o bin/chimera ./cmd/chimera
@@ -24,3 +24,6 @@ docker:
 transiva-config:
 	./scripts/make-transiva-config.sh > transiva-chimera.yaml
 	@echo "wrote transiva-chimera.yaml"
+
+package:
+	./scripts/package.sh
