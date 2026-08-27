@@ -7,7 +7,7 @@ PASS="${CHIMERA_PASSWORD:-vmware}"
 OUT="${OUT:-/tmp/transiva-chimera}"
 CFG="${CFG:-/tmp/transiva-chimera.yaml}"
 
-curl -fsS "${LAB_URL%/sdk}/__chimera/health" >/dev/null
+curl -fsSk "${LAB_URL%/sdk}/__chimera/health" >/dev/null
 CHIMERA_URL="$LAB_URL" CHIMERA_USERNAME="$USER" CHIMERA_PASSWORD="$PASS" ./scripts/make-transiva-config.sh > "$CFG"
 mkdir -p "$OUT"
 
