@@ -1,8 +1,10 @@
 package gateway
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -71,7 +73,7 @@ func TestNFCRangeShim(t *testing.T) {
 }
 
 func TestLocalNFCRange(t *testing.T) {
-	s, err := fixture.New("", "", 1, nil)
+	s, err := fixture.New("", "", nil, 1, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -229,7 +231,7 @@ func TestInventoryReflectsRealSimulatorVMs(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, vmNames[0]+".vmdk"), []byte("x"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	fixtures, err := fixture.New("", dir, 1, vmNames)
+	fixtures, err := fixture.New("", dir, nil, 1, vmNames)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -297,7 +299,7 @@ func TestVMDKsEndpoint(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "unmatched-disk.vmdk"), []byte("y"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	fixtures, err := fixture.New("", dir, 1, vmNames)
+	fixtures, err := fixture.New("", dir, nil, 1, vmNames)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -328,5 +330,251 @@ func TestVMDKsEndpoint(t *testing.T) {
 	// 2 VMs, 2 files: one matches by name, the leftover file/VM pair off via round-robin.
 	if got.Total != 2 || got.Matched != 1 || got.RoundRobin != 1 || got.Unassigned != 0 {
 		t.Fatalf("got total=%d matched=%d round_robin=%d unassigned=%d, want 2/1/1/0", got.Total, got.Matched, got.RoundRobin, got.Unassigned)
+	}
+}
+
+func multipartVMDK(t *testing.T, fileName, vmName string) (*bytes.Buffer, string) {
+	t.Helper()
+	var buf bytes.Buffer
+	mw := multipart.NewWriter(&buf)
+	fw, err := mw.CreateFormFile("file", fileName)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := fw.Write([]byte("uploaded-vmdk-bytes")); err != nil {
+		t.Fatal(err)
+	}
+	if vmName != "" {
+		if err := mw.WriteField("vm_name", vmName); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := mw.Close(); err != nil {
+		t.Fatal(err)
+	}
+	return &buf, mw.FormDataContentType()
+}
+
+func TestUploadVMDK(t *testing.T) {
+	registry, vmNames := realVMModel(t)
+
+	dir := t.TempDir()
+	fixtures, err := fixture.New("", dir, nil, 1, vmNames)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fixtures.Close()
+
+	up := httptest.NewServer(http.NotFoundHandler())
+	defer up.Close()
+	u, _ := url.Parse(up.URL)
+	g := New(u, "http://public.invalid", "secret", faults.New(), fixtures, registry)
+	pub := httptest.NewServer(g)
+	defer pub.Close()
+
+	// Unauthenticated upload is rejected.
+	body, ct := multipartVMDK(t, "unauth.vmdk", "")
+	req, _ := http.NewRequest(http.MethodPost, pub.URL+"/__chimera/api/vmdks/upload", body)
+	req.Header.Set("Content-Type", ct)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	res.Body.Close()
+	if res.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("unauthenticated upload status=%d, want 401", res.StatusCode)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "unauth.vmdk")); err == nil {
+		t.Fatal("unauthenticated upload should not have written a file")
+	}
+
+	// Authenticated upload with an explicit VM assignment.
+	body, ct = multipartVMDK(t, "picked.vmdk", vmNames[0])
+	req, _ = http.NewRequest(http.MethodPost, pub.URL+"/__chimera/api/vmdks/upload", body)
+	req.Header.Set("Content-Type", ct)
+	req.Header.Set("Authorization", "Bearer secret")
+	res, err = http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer res.Body.Close()
+	respBody, _ := io.ReadAll(res.Body)
+	if res.StatusCode != http.StatusOK {
+		t.Fatalf("authenticated upload status=%d body=%q", res.StatusCode, respBody)
+	}
+	if !strings.Contains(string(respBody), `"picked.vmdk"`) {
+		t.Fatalf("upload response missing picked.vmdk: %s", respBody)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "picked.vmdk")); err != nil {
+		t.Fatalf("uploaded file not written to fixture_vmdk_dir: %v", err)
+	}
+	if method, file := fixtures.SourceFor(vmNames[0]); method != fixture.MethodManual || file != "picked.vmdk" {
+		t.Fatalf("SourceFor(%s)=%q/%q, want manual/picked.vmdk", vmNames[0], method, file)
+	}
+
+	// Rejects non-.vmdk uploads.
+	body, ct = multipartVMDK(t, "not-a-disk.txt", "")
+	req, _ = http.NewRequest(http.MethodPost, pub.URL+"/__chimera/api/vmdks/upload", body)
+	req.Header.Set("Content-Type", ct)
+	req.Header.Set("Authorization", "Bearer secret")
+	res, err = http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	res.Body.Close()
+	if res.StatusCode != http.StatusBadRequest {
+		t.Fatalf("non-.vmdk upload status=%d, want 400", res.StatusCode)
+	}
+}
+
+func TestBrowseAndAssignVMDK(t *testing.T) {
+	registry, vmNames := realVMModel(t)
+
+	dir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(dir, "staged"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "staged", "onhost.vmdk"), []byte("x"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	fixtures, err := fixture.New("", dir, nil, 1, vmNames)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fixtures.Close()
+
+	up := httptest.NewServer(http.NotFoundHandler())
+	defer up.Close()
+	u, _ := url.Parse(up.URL)
+	g := New(u, "http://public.invalid", "secret", faults.New(), fixtures, registry)
+	pub := httptest.NewServer(g)
+	defer pub.Close()
+
+	authed := func(method, path, body string) *http.Response {
+		var r io.Reader
+		if body != "" {
+			r = strings.NewReader(body)
+		}
+		req, _ := http.NewRequest(method, pub.URL+path, r)
+		req.Header.Set("Authorization", "Bearer secret")
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return res
+	}
+
+	// Browsing the root lists the "staged" subdirectory.
+	res := authed(http.MethodGet, "/__chimera/api/vmdks/browse?root=0&path=", "")
+	respBody, _ := io.ReadAll(res.Body)
+	res.Body.Close()
+	if res.StatusCode != http.StatusOK || !strings.Contains(string(respBody), `"staged"`) {
+		t.Fatalf("browse root status=%d body=%q", res.StatusCode, respBody)
+	}
+
+	// Browsing into "staged" lists onhost.vmdk.
+	res = authed(http.MethodGet, "/__chimera/api/vmdks/browse?root=0&path=staged", "")
+	respBody, _ = io.ReadAll(res.Body)
+	res.Body.Close()
+	if res.StatusCode != http.StatusOK || !strings.Contains(string(respBody), `"onhost.vmdk"`) {
+		t.Fatalf("browse staged status=%d body=%q", res.StatusCode, respBody)
+	}
+
+	// A path-traversal attempt is rejected.
+	res = authed(http.MethodGet, "/__chimera/api/vmdks/browse?root=0&path=..%2F..%2Fetc", "")
+	res.Body.Close()
+	if res.StatusCode != http.StatusBadRequest {
+		t.Fatalf("path-traversal browse status=%d, want 400", res.StatusCode)
+	}
+
+	// Assigning the staged file pins it without re-uploading.
+	assignBody := `{"root":0,"file_name":"staged/onhost.vmdk","vm_name":"` + vmNames[0] + `"}`
+	res = authed(http.MethodPost, "/__chimera/api/vmdks/assign", assignBody)
+	respBody, _ = io.ReadAll(res.Body)
+	res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		t.Fatalf("assign status=%d body=%q", res.StatusCode, respBody)
+	}
+	if method, file := fixtures.SourceFor(vmNames[0]); method != fixture.MethodManual || file != "staged/onhost.vmdk" {
+		t.Fatalf("SourceFor(%s)=%q/%q, want manual/staged/onhost.vmdk", vmNames[0], method, file)
+	}
+
+	// Unauthenticated browse/assign are both rejected.
+	res, err = http.Get(pub.URL + "/__chimera/api/vmdks/browse?root=0&path=")
+	if err != nil {
+		t.Fatal(err)
+	}
+	res.Body.Close()
+	if res.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("unauthenticated browse status=%d, want 401", res.StatusCode)
+	}
+}
+
+func TestLoginAndChangeCredentials(t *testing.T) {
+	up := httptest.NewServer(http.NotFoundHandler())
+	defer up.Close()
+	u, _ := url.Parse(up.URL)
+	g := New(u, "http://chimera.test", "secret-token", faults.New(), nil, nil, Meta{
+		Version: "test", Persona: "vSphere", AdminUsername: "admin", AdminPassword: "admin",
+	})
+	pub := httptest.NewServer(g)
+	defer pub.Close()
+
+	postJSON := func(path, body string) *http.Response {
+		res, err := http.Post(pub.URL+path, "application/json", strings.NewReader(body))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return res
+	}
+
+	// Wrong credentials are rejected.
+	res := postJSON("/__chimera/login", `{"username":"admin","password":"wrong"}`)
+	res.Body.Close()
+	if res.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("wrong-password login status=%d, want 401", res.StatusCode)
+	}
+
+	// Default admin/admin succeeds and returns the configured bearer token.
+	res = postJSON("/__chimera/login", `{"username":"admin","password":"admin"}`)
+	var loginResp struct {
+		Token string `json:"token"`
+	}
+	if err := json.NewDecoder(res.Body).Decode(&loginResp); err != nil {
+		t.Fatal(err)
+	}
+	res.Body.Close()
+	if res.StatusCode != http.StatusOK || loginResp.Token != "secret-token" {
+		t.Fatalf("login status=%d token=%q, want 200/secret-token", res.StatusCode, loginResp.Token)
+	}
+
+	// /admin/credentials requires the bearer token.
+	res = postJSON("/__chimera/admin/credentials", `{"username":"op","password":"newpass"}`)
+	res.Body.Close()
+	if res.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("unauthenticated change-credentials status=%d, want 401", res.StatusCode)
+	}
+
+	req, _ := http.NewRequest(http.MethodPost, pub.URL+"/__chimera/admin/credentials", strings.NewReader(`{"username":"op","password":"newpass"}`))
+	req.Header.Set("Authorization", "Bearer "+loginResp.Token)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		t.Fatalf("authenticated change-credentials status=%d", res.StatusCode)
+	}
+
+	// Old credentials no longer work; new ones do.
+	res = postJSON("/__chimera/login", `{"username":"admin","password":"admin"}`)
+	res.Body.Close()
+	if res.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("old credentials still work after change: status=%d", res.StatusCode)
+	}
+	res = postJSON("/__chimera/login", `{"username":"op","password":"newpass"}`)
+	res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		t.Fatalf("new credentials login status=%d, want 200", res.StatusCode)
 	}
 }

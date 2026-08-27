@@ -59,8 +59,13 @@ func serve(args []string) {
 	fmt.Printf("  username: %s\n", cfg.Username)
 	fmt.Printf("  password: %s\n", cfg.Password)
 	fmt.Printf("  admin:    %s://%s/__chimera/\n", l.URL.Scheme, l.URL.Host)
+	fmt.Printf("  login:    %s / %s\n", cfg.AdminUsername, cfg.AdminPassword)
 	fmt.Printf("  token:    %s\n", cfg.AdminToken)
 	fmt.Printf("  sample VM path: /DC0/vm/DC0_C0_RP0_VM0\n")
+	if cfg.AdminUsername == "admin" && cfg.AdminPassword == "admin" {
+		fmt.Printf("  \u26a0 Using default admin credentials (admin/admin), reachable on all interfaces by default —\n")
+		fmt.Printf("    set CHIMERA_ADMIN_USERNAME/CHIMERA_ADMIN_PASSWORD (or change it in the dashboard's Settings) to change them.\n")
+	}
 	<-ctx.Done()
 	cctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

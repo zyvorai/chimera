@@ -3,8 +3,11 @@ package fixture
 import (
 	"fmt"
 	"io"
+	"io/fs"
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -25,11 +28,15 @@ const (
 	MethodSharedFile = "shared-file" // single fixture_vmdk shared by every VM
 	MethodGenerated  = "generated"   // per-VM deterministic synthetic fixture
 	MethodUnassigned = "unassigned"  // fixture_vmdk_dir file that matched no VM
+	MethodManual     = "manual"      // fixture_vmdk_dir file explicitly pinned to a VM via SetOverride
 )
 
-// Assignment describes one file found under fixture_vmdk_dir and, if any, the
-// VM it was matched to.
+// Assignment describes one file found under a fixture_vmdk_dir root (the
+// primary fixture_vmdk_dir or one of fixture_vmdk_dirs) and, if any, the VM
+// it was matched to. FileName is relative to its Root, so a file may be
+// nested in a subdirectory (e.g. "web-tier/disk1.vmdk").
 type Assignment struct {
+	Root      int    `json:"root"`
 	FileName  string `json:"file_name"`
 	Path      string `json:"-"`
 	SizeBytes int64  `json:"size_bytes"`
@@ -42,6 +49,7 @@ type Store struct {
 	dir         string
 	fixturePath string
 	fixtureDir  string
+	extraDirs   []string
 	vmNames     []string
 	sizeMB      int
 	files       map[string]string
@@ -51,19 +59,31 @@ type Store struct {
 	byVM        map[string]Assignment
 	assignments []Assignment
 
+	// overrides pins a fixture_vmdk_dir/fixture_vmdk_dirs file (keyed
+	// "root|relativeName") to a specific VM, taking priority over
+	// name-match/round-robin on the next Rescan.
+	overrides map[string]string
+
 	stopPoll chan struct{}
 }
 
 // New constructs a fixture Store. fixturePath (a single shared VMDK) and
 // fixtureDir (a directory of VMDKs, one matched per VM) are mutually
-// exclusive. vmNames is the real, live list of simulated VM names, used to
-// match against fixtureDir's contents.
-func New(fixturePath, fixtureDir string, sizeMB int, vmNames []string) (*Store, error) {
+// exclusive. extraDirs are additional read-only directories scanned and
+// matched the same way as fixtureDir — browser uploads always land in
+// fixtureDir (the sole write target), extraDirs only ever contribute files
+// an operator staged there directly on the host. vmNames is the real, live
+// list of simulated VM names, used to match against fixtureDir/extraDirs'
+// contents.
+func New(fixturePath, fixtureDir string, extraDirs []string, sizeMB int, vmNames []string) (*Store, error) {
 	if sizeMB < 1 {
 		sizeMB = 16
 	}
 	if fixturePath != "" && fixtureDir != "" {
 		return nil, fmt.Errorf("fixture_vmdk and fixture_vmdk_dir are mutually exclusive")
+	}
+	if fixturePath != "" && len(extraDirs) > 0 {
+		return nil, fmt.Errorf("fixture_vmdk and fixture_vmdk_dirs are mutually exclusive")
 	}
 	if fixturePath != "" {
 		abs, err := filepath.Abs(fixturePath)
@@ -81,18 +101,19 @@ func New(fixturePath, fixtureDir string, sizeMB int, vmNames []string) (*Store, 
 	}
 
 	if fixtureDir != "" {
-		abs, err := filepath.Abs(fixtureDir)
+		abs, err := resolveFixtureDir(fixtureDir)
 		if err != nil {
 			return nil, err
 		}
-		st, err := os.Stat(abs)
-		if err != nil {
-			return nil, fmt.Errorf("fixture_vmdk_dir: %w", err)
-		}
-		if !st.IsDir() {
-			return nil, fmt.Errorf("fixture_vmdk_dir is not a directory: %s", abs)
-		}
 		fixtureDir = abs
+	}
+	resolvedExtras := make([]string, 0, len(extraDirs))
+	for _, d := range extraDirs {
+		abs, err := resolveFixtureDir(d)
+		if err != nil {
+			return nil, err
+		}
+		resolvedExtras = append(resolvedExtras, abs)
 	}
 
 	dir, err := os.MkdirTemp("", "chimera-fixtures-")
@@ -100,11 +121,12 @@ func New(fixturePath, fixtureDir string, sizeMB int, vmNames []string) (*Store, 
 		return nil, err
 	}
 	s := &Store{
-		dir: dir, fixturePath: fixturePath, fixtureDir: fixtureDir,
+		dir: dir, fixturePath: fixturePath, fixtureDir: fixtureDir, extraDirs: resolvedExtras,
 		vmNames: append([]string(nil), vmNames...), sizeMB: sizeMB,
 		files: make(map[string]string), stopPoll: make(chan struct{}),
+		overrides: make(map[string]string),
 	}
-	if fixtureDir != "" {
+	if fixtureDir != "" || len(resolvedExtras) > 0 {
 		if err := s.Rescan(); err != nil {
 			return nil, err
 		}
@@ -113,15 +135,35 @@ func New(fixturePath, fixtureDir string, sizeMB int, vmNames []string) (*Store, 
 	return s, nil
 }
 
+func resolveFixtureDir(dir string) (string, error) {
+	abs, err := filepath.Abs(dir)
+	if err != nil {
+		return "", err
+	}
+	st, err := os.Stat(abs)
+	if err != nil {
+		return "", fmt.Errorf("fixture_vmdk_dir: %w", err)
+	}
+	if !st.IsDir() {
+		return "", fmt.Errorf("fixture_vmdk_dir is not a directory: %s", abs)
+	}
+	return abs, nil
+}
+
 // Rescan re-scans fixture_vmdk_dir and updates the VM/file assignment. It is
 // called once synchronously in New(), then periodically by pollFixtureDir so
 // an operator can drop in a new VMDK without restarting the server. It is a
 // no-op error if fixture_vmdk_dir isn't configured.
 func (s *Store) Rescan() error {
-	if s.fixtureDir == "" {
+	roots := s.roots()
+	if len(roots) == 0 {
 		return fmt.Errorf("fixture_vmdk_dir is not configured")
 	}
-	byVM, assignments, err := scanFixtureDir(s.fixtureDir, s.vmNames)
+	s.mu.RLock()
+	overrides := make(map[string]string, len(s.overrides))
+	maps.Copy(overrides, s.overrides)
+	s.mu.RUnlock()
+	byVM, assignments, err := scanFixtureDir(roots, s.vmNames, overrides)
 	if err != nil {
 		return err
 	}
@@ -130,6 +172,50 @@ func (s *Store) Rescan() error {
 	s.assignments = assignments
 	s.mu.Unlock()
 	return nil
+}
+
+// Roots returns the configured fixture directories: fixture_vmdk_dir (index
+// 0, the sole upload/write target) followed by fixture_vmdk_dirs. Empty when
+// neither is configured.
+func (s *Store) Roots() []string { return s.roots() }
+
+func (s *Store) roots() []string {
+	var roots []string
+	if s.fixtureDir != "" {
+		roots = append(roots, s.fixtureDir)
+	}
+	roots = append(roots, s.extraDirs...)
+	return roots
+}
+
+// overrideKey identifies a file uniquely across every configured root.
+func overrideKey(root int, fileName string) string { return fmt.Sprintf("%d|%s", root, fileName) }
+
+// SetOverride pins fileName (relative to root, a file already present — or,
+// for root 0, about to be written — under that fixture directory) to vmName,
+// taking priority over name-match/round-robin on the next scan. It triggers
+// an immediate Rescan so the assignment takes effect right away.
+func (s *Store) SetOverride(root int, fileName, vmName string) error {
+	roots := s.roots()
+	if root < 0 || root >= len(roots) {
+		return fmt.Errorf("unknown fixture root: %d", root)
+	}
+	if !slices.Contains(s.vmNames, vmName) {
+		return fmt.Errorf("unknown VM: %s", vmName)
+	}
+	s.mu.Lock()
+	s.overrides[overrideKey(root, fileName)] = vmName
+	s.mu.Unlock()
+	return s.Rescan()
+}
+
+// ClearOverride removes a manual pin for fileName under root, letting it
+// fall back to name-match/round-robin on the next scan.
+func (s *Store) ClearOverride(root int, fileName string) error {
+	s.mu.Lock()
+	delete(s.overrides, overrideKey(root, fileName))
+	s.mu.Unlock()
+	return s.Rescan()
 }
 
 func (s *Store) pollFixtureDir() {
@@ -145,34 +231,52 @@ func (s *Store) pollFixtureDir() {
 	}
 }
 
-// scanFixtureDir lists dir's *.vmdk files and assigns each to a VM: first by
-// matching the file's sanitized basename to a VM's sanitized name, then by
-// pairing any leftover files with any leftover VMs in sorted order. Files
-// left unassigned (more files than unmatched VMs) stay MethodUnassigned;
-// VMs left unassigned (more VMs than unmatched files) are simply absent
-// from byVM, so Prepare falls back to the generated-fixture path for them.
-func scanFixtureDir(dir string, vmNames []string) (map[string]Assignment, []Assignment, error) {
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return nil, nil, fmt.Errorf("fixture_vmdk_dir: %w", err)
-	}
+// scanFixtureDir recursively lists every *.vmdk file under roots (index 0 is
+// fixture_vmdk_dir, the rest are fixture_vmdk_dirs) and assigns each to a VM:
+// first by honoring any manual override (a file explicitly pinned to a VM),
+// then by matching the file's sanitized basename (ignoring any subdirectory
+// it's nested in) to a VM's sanitized name, then by pairing any leftover
+// files with any leftover VMs in sorted order. Files left unassigned (more
+// files than unmatched VMs) stay MethodUnassigned; VMs left unassigned (more
+// VMs than unmatched files) are simply absent from byVM, so Prepare falls
+// back to the generated-fixture path for them.
+func scanFixtureDir(roots []string, vmNames []string, overrides map[string]string) (map[string]Assignment, []Assignment, error) {
 	type diskFile struct {
-		name string
+		root int
+		rel  string // path relative to its root, e.g. "web-tier/disk1.vmdk"
 		path string
 		size int64
 	}
 	var files []diskFile
-	for _, e := range entries {
-		if e.IsDir() || !strings.EqualFold(filepath.Ext(e.Name()), ".vmdk") {
-			continue
-		}
-		info, err := e.Info()
+	for ri, root := range roots {
+		err := filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			if d.IsDir() || !strings.EqualFold(filepath.Ext(d.Name()), ".vmdk") {
+				return nil
+			}
+			info, err := d.Info()
+			if err != nil {
+				return nil
+			}
+			rel, err := filepath.Rel(root, p)
+			if err != nil {
+				return nil
+			}
+			files = append(files, diskFile{root: ri, rel: filepath.ToSlash(rel), path: p, size: info.Size()})
+			return nil
+		})
 		if err != nil {
-			continue
+			return nil, nil, fmt.Errorf("fixture_vmdk_dir: %w", err)
 		}
-		files = append(files, diskFile{name: e.Name(), path: filepath.Join(dir, e.Name()), size: info.Size()})
 	}
-	sort.Slice(files, func(i, j int) bool { return files[i].name < files[j].name })
+	sort.Slice(files, func(i, j int) bool {
+		if files[i].root != files[j].root {
+			return files[i].root < files[j].root
+		}
+		return files[i].rel < files[j].rel
+	})
 
 	vmSorted := append([]string(nil), vmNames...)
 	sort.Strings(vmSorted)
@@ -186,17 +290,49 @@ func scanFixtureDir(dir string, vmNames []string) (map[string]Assignment, []Assi
 
 	result := make([]Assignment, len(files))
 	for i, f := range files {
-		result[i] = Assignment{FileName: f.name, Path: f.path, SizeBytes: f.size, Method: MethodUnassigned}
+		result[i] = Assignment{Root: f.root, FileName: f.rel, Path: f.path, SizeBytes: f.size, Method: MethodUnassigned}
 	}
 	byVM := make(map[string]Assignment, len(vmSorted))
 	assignedVM := make(map[string]bool, len(vmSorted))
+	assignedIdx := make([]bool, len(files))
 
-	// Pass 1: filename match.
+	// Pass 0: manual overrides (a file explicitly pinned to a VM via the
+	// dashboard). Processed in sorted key order so two overrides racing for
+	// the same VM resolve deterministically.
+	fileByKey := make(map[string]int, len(files))
 	for i, f := range files {
-		base := strings.TrimSuffix(f.name, filepath.Ext(f.name))
+		fileByKey[overrideKey(f.root, f.rel)] = i
+	}
+	overrideKeys := make([]string, 0, len(overrides))
+	for k := range overrides {
+		overrideKeys = append(overrideKeys, k)
+	}
+	sort.Strings(overrideKeys)
+	for _, ok := range overrideKeys {
+		vm := overrides[ok]
+		idx, found := fileByKey[ok]
+		key := sanitize(vm)
+		if !found || assignedVM[key] {
+			continue // file no longer on disk, or its target VM was already claimed
+		}
+		a := Assignment{Root: files[idx].root, FileName: files[idx].rel, Path: files[idx].path, SizeBytes: files[idx].size, VMName: vm, Method: MethodManual}
+		result[idx] = a
+		byVM[key] = a
+		assignedVM[key] = true
+		assignedIdx[idx] = true
+	}
+
+	// Pass 1: filename match on the file's own basename, ignoring any
+	// subdirectory it's nested in (skip files already manually assigned).
+	for i, f := range files {
+		if assignedIdx[i] {
+			continue
+		}
+		name := filepath.Base(f.rel)
+		base := strings.TrimSuffix(name, filepath.Ext(name))
 		key := sanitize(base)
 		if vm, ok := vmByKey[key]; ok && !assignedVM[key] {
-			a := Assignment{FileName: f.name, Path: f.path, SizeBytes: f.size, VMName: vm, Method: MethodNameMatch}
+			a := Assignment{Root: f.root, FileName: f.rel, Path: f.path, SizeBytes: f.size, VMName: vm, Method: MethodNameMatch}
 			result[i] = a
 			byVM[key] = a
 			assignedVM[key] = true
@@ -221,7 +357,7 @@ func scanFixtureDir(dir string, vmNames []string) (map[string]Assignment, []Assi
 		idx := leftoverFileIdx[i]
 		vm := leftoverVMs[i]
 		key := sanitize(vm)
-		a := Assignment{FileName: files[idx].name, Path: files[idx].path, SizeBytes: files[idx].size, VMName: vm, Method: MethodRoundRobin}
+		a := Assignment{Root: files[idx].root, FileName: files[idx].rel, Path: files[idx].path, SizeBytes: files[idx].size, VMName: vm, Method: MethodRoundRobin}
 		result[idx] = a
 		byVM[key] = a
 		assignedVM[key] = true
@@ -231,7 +367,7 @@ func scanFixtureDir(dir string, vmNames []string) (map[string]Assignment, []Assi
 }
 
 func (s *Store) Close() error {
-	if s.fixtureDir != "" {
+	if len(s.roots()) > 0 {
 		close(s.stopPoll)
 	}
 	if s.dir == "" {
@@ -266,7 +402,7 @@ func (s *Store) SourceFor(vmName string) (method, fileName string) {
 	if s.fixturePath != "" {
 		return MethodSharedFile, filepath.Base(s.fixturePath)
 	}
-	if s.fixtureDir != "" {
+	if len(s.roots()) > 0 {
 		s.mu.RLock()
 		a, ok := s.byVM[sanitize(vmName)]
 		s.mu.RUnlock()
@@ -285,7 +421,7 @@ func (s *Store) Prepare(vmName string) (string, int64, error) {
 		}
 		return s.fixturePath, st.Size(), nil
 	}
-	if s.fixtureDir != "" {
+	if len(s.roots()) > 0 {
 		s.mu.RLock()
 		a, ok := s.byVM[sanitize(vmName)]
 		s.mu.RUnlock()

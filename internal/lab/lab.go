@@ -89,7 +89,7 @@ func Start(ctx context.Context, cfg config.Config) (*Lab, error) {
 	publicBase := scheme + "://" + host
 	publicURL, _ := url.Parse(publicBase + "/sdk")
 
-	fixtures, err := fixture.New(cfg.FixtureVMDK, cfg.FixtureVMDKDir, cfg.FixtureSizeMB, vmNames)
+	fixtures, err := fixture.New(cfg.FixtureVMDK, cfg.FixtureVMDKDir, cfg.FixtureVMDKDirs, cfg.FixtureSizeMB, vmNames)
 	if err != nil {
 		ln.Close()
 		backend.Close()
@@ -116,6 +116,7 @@ func Start(ctx context.Context, cfg config.Config) (*Lab, error) {
 		Version: "0.2.0", Persona: "vSphere", Username: cfg.Username, Datacenters: cfg.Datacenters,
 		Clusters: cfg.Datacenters * cfg.Clusters, Hosts: hosts, Datastores: cfg.Datacenters * cfg.Datastores,
 		VMs: vmCount, FixtureSizeMB: cfg.FixtureSizeMB, TLS: cfg.TLS,
+		Listen: cfg.Listen, AdminUsername: cfg.AdminUsername, AdminPassword: cfg.AdminPassword,
 	})
 	hs := &http.Server{Handler: gw, ReadHeaderTimeout: 15 * time.Second}
 
