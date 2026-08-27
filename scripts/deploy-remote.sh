@@ -258,9 +258,17 @@ info "chimera.service active"
 
 # ── Step 5: verify with the real vSphere contract (login, inventory, export, NFC) ──
 step "Verifying deployment"
-LAB_URL="http://${HOST}:${CHIMERA_PORT}/sdk"
-_ssh "curl -fsS http://127.0.0.1:${CHIMERA_PORT}/__chimera/health >/dev/null" \
-    && info "Health check OK (http://127.0.0.1:${CHIMERA_PORT}/__chimera/health, on-host)"
+# CHIMERA_TLS may already be set in the remote chimera.env from a prior
+# manual change (deploy never touches that file) — probe rather than assume,
+# so verification doesn't false-fail against a TLS-only listener.
+LAB_SCHEME="http"
+if _ssh_batch "curl -sk -o /dev/null -w '%{http_code}' https://127.0.0.1:${CHIMERA_PORT}/__chimera/health" 2>/dev/null | grep -q '^200$'; then
+    LAB_SCHEME="https"
+fi
+LAB_URL="${LAB_SCHEME}://${HOST}:${CHIMERA_PORT}/sdk"
+DEPLOY_UI_SCHEME="$LAB_SCHEME" # so the final success banner prints the right URL scheme
+_ssh "curl -fsSk ${LAB_SCHEME}://127.0.0.1:${CHIMERA_PORT}/__chimera/health >/dev/null" \
+    && info "Health check OK (${LAB_SCHEME}://127.0.0.1:${CHIMERA_PORT}/__chimera/health, on-host)"
 
 LOCAL_BIN="$REPO_DIR/bin/chimera"
 if [ ! -x "$LOCAL_BIN" ]; then
@@ -276,7 +284,7 @@ chimera_save_deploy_last "$REPO_DIR" "$HOST" "$USER" "full"
 
 deploy_ui_highlight "📋 Final checklist"
 deploy_ui_checklist "service" "$(_ssh_batch "$SUDO systemctl is-active chimera.service" | tr -d '\r')"
-deploy_ui_checklist "health"  "$(_ssh_batch "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:${CHIMERA_PORT}/__chimera/health" | tr -d '\r')"
+deploy_ui_checklist "health"  "$(_ssh_batch "curl -sk -o /dev/null -w '%{http_code}' ${LAB_SCHEME}://127.0.0.1:${CHIMERA_PORT}/__chimera/health" | tr -d '\r')"
 
 chimera_print_success "$HOST" 0
 
