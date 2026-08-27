@@ -120,7 +120,7 @@ Open the Command Center — `/` also redirects here:
 http://localhost:8989/__chimera/
 ```
 
-The dashboard's read-only views (health, bootstrap, inventory, telemetry, VMDK list) are public in the disposable lab. Mutating controls require logging in — default `admin`/`admin`, printed at startup and changeable from the dashboard's Settings panel or `CHIMERA_ADMIN_USERNAME`/`CHIMERA_ADMIN_PASSWORD`. Chimera listens on `0.0.0.0` by default, so change these before exposing an instance beyond your own machine.
+The browser dashboard itself is a full-page login gate — nothing renders until you log in with `admin`/`admin` (printed at startup, changeable from the dashboard's Settings panel or `CHIMERA_ADMIN_USERNAME`/`CHIMERA_ADMIN_PASSWORD`). That's a frontend-only gate, though: the underlying read APIs (health, bootstrap, inventory, telemetry, VMDK list) stay public in the disposable lab regardless, so scripts/CI can still poll them directly without a token. Chimera listens on `0.0.0.0` by default, so change the admin login before exposing an instance beyond your own machine.
 
 Run the end-to-end client probe:
 

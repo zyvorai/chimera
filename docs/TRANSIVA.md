@@ -129,7 +129,7 @@ Don't have a real VMDK handy? `make fixtures` (`scripts/fetch-sample-fixtures.sh
 Transiva's daemon (`transivad`) also has its own "Providers" UI (`Migrate hub → Providers → Connect vSphere`) as an alternative to the CLI config above. Transiva's connect form assumes `https://` for a bare `host:port`, so the **vCenter Host** field must always have an explicit scheme matching how the target Chimera is actually running:
 
 - `CHIMERA_TLS` unset/`false` (the default): `http://<chimera-host>:8989` — a bare `host:port` here fails with `server gave HTTP response to HTTPS client`.
-- `CHIMERA_TLS=true`: `https://<chimera-host>:8989` — using `http://` here instead fails differently, with `POST "/sdk": 400 Bad Request` (Chimera's listener speaks TLS only, no plain-HTTP fallback on the same port). **A previously-saved credential doesn't update itself if you flip `CHIMERA_TLS` later** — delete and reconnect it with the corrected scheme.
+- `CHIMERA_TLS=true`: `https://<chimera-host>:8989` — using `http://` here instead fails differently, with `POST "/sdk": 400 Bad Request` (Chimera's listener speaks TLS only, no plain-HTTP fallback on the same port). If you flip `CHIMERA_TLS` after already saving a credential, just edit the vCenter Host field to the corrected scheme and reconnect — no need to delete it first (Transiva commit `682765c` fixed a bug where the edited field could be silently overridden by the old saved value).
 
 Either way:
 
@@ -137,7 +137,7 @@ Either way:
 - Password: `vmware`
 - Datacenter: `DC0`
 
-Chimera's self-signed cert works with the CLI config path because the generated YAML sets `insecure: true`. Whether Transiva's *web* connect form has an equivalent way to skip certificate verification is between you and Transiva's own connect-form code (outside this repo) — if `https://` still fails after fixing the scheme, that's the next thing to check, not a Chimera-side issue.
+Chimera's self-signed cert works with the CLI config path because the generated YAML sets `insecure: true`. Transiva's web connect form has a matching "Skip TLS certificate verification" checkbox next to the vCenter Host field — check it when pointing at a TLS-enabled Chimera with a self-signed cert. Two real bugs were found and fixed in Transiva while testing this against a live TLS-enabled Chimera instance (both outside this repo, in `transiva-`): the connect form originally had no way to skip certificate verification at all, and separately, reconnecting after editing a previously-saved vCenter Host could silently keep using the old saved URL because a stale internal `host` field shadowed the edited one. Both are fixed as of Transiva commits `b13ee6a` and `682765c`; a form that still fails after checking the box and confirming the URL is current is worth re-checking against those, not assumed to be a fresh Chimera-side issue.
 
 Once connected, VM discovery for that provider goes through Transiva's `GET /api/providers/vms?provider=vsphere` (not the legacy `/vms/list`), so navigate to the **VMs** tab or **Migrate hub** to see Chimera's simulated inventory rather than expecting it on the connect dialog itself.
 

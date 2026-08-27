@@ -37,7 +37,7 @@ A live donut groups infrastructure traffic into gateway operation classes such a
 
 ### Live requests
 
-The request feed shows method, compact path, HTTP status and end-to-end gateway duration for the newest infrastructure requests.
+The request feed shows method, compact path, HTTP status and end-to-end gateway duration for the newest infrastructure requests. "View All" toggles the visible row count between 10 and 30 (still within the server's buffered request history, no extra API call), flipping its own label between "View All" and "View Less." The topbar bell icon (badge driven by the current error count) scrolls straight to this panel — useful for jumping to failing calls shown as red status codes.
 
 ### VM inventory
 
@@ -88,7 +88,7 @@ A right-side administrative drawer controls:
 - stream drop offset
 - bandwidth cap
 
-The drawer can be opened from the top command bar, sidebar or scenario panel.
+The drawer can be opened from the top command bar's gear icon, sidebar or scenario panel.
 
 ### Health and engine status
 
@@ -96,9 +96,11 @@ The sidebar health ring derives a simple health score from current error rate an
 
 ## Authentication model
 
-The dashboard and read-only health/bootstrap/inventory/telemetry/vmdks endpoints are public inside the disposable lab. Mutating controls require logging in through a real username/password form (default `admin`/`admin`) — this wraps the same admin bearer token every protected API call has always used: `POST /__chimera/login` checks the credentials (constant-time comparison, no lockout/rate-limiting — this is a test-lab tool, not a hardened auth system) and hands back the token on success, which the dashboard then sends as `Authorization: Bearer <token>` exactly as before.
+The dashboard is a **full-page login gate**: without a valid session, the browser shows only a dedicated login screen (username/password, default `admin`/`admin`) and never renders or fetches dashboard data — no flash of inventory/telemetry content before the login check runs. This is a frontend-only gate. The underlying `/__chimera/*` read endpoints (health, bootstrap, inventory, telemetry, vmdks) remain reachable without a token exactly as before, so `deploy-remote.sh`'s health check, `transiva-smoke.sh`, and anything else scripting against the API directly are unaffected — only the browser UI's behavior changed.
 
-The browser stores the token only in `sessionStorage`, so it disappears when the browser session closes. The admin login itself (not the token) can be changed live from the Settings panel, or via `CHIMERA_ADMIN_USERNAME`/`CHIMERA_ADMIN_PASSWORD` at startup — see the README's Configuration table.
+Logging in calls `POST /__chimera/login`, which checks the credentials (constant-time comparison, no lockout/rate-limiting — this is a test-lab tool, not a hardened auth system) and hands back the same admin bearer token every protected write endpoint has always used; the dashboard then sends it as `Authorization: Bearer <token>` and loads the dashboard for the first time. Logging out (via the topbar user menu) clears the token and returns to the login page rather than leaving dashboard chrome visible behind a reopened dialog.
+
+The browser stores the token only in `sessionStorage`, so it disappears when the browser session closes — reloading with a still-valid token goes straight to the dashboard, while a stale/expired one falls back to the login page. The admin login itself (not the token) can be changed live from the Settings panel, or via `CHIMERA_ADMIN_USERNAME`/`CHIMERA_ADMIN_PASSWORD` at startup — see the README's Configuration table.
 
 ### Settings panel
 
