@@ -126,12 +126,18 @@ Don't have a real VMDK handy? `make fixtures` (`scripts/fetch-sample-fixtures.sh
 
 ## Connecting via Transiva's web dashboard (Providers page)
 
-Transiva's daemon (`transivad`) also has its own "Providers" UI (`Migrate hub → Providers → Connect vSphere`) as an alternative to the CLI config above. Since Chimera doesn't serve TLS by default, the **vCenter Host** field needs an explicit `http://` prefix — Transiva's connect form otherwise assumes `https://` for a bare `host:port` and the connection will fail with `server gave HTTP response to HTTPS client`:
+Transiva's daemon (`transivad`) also has its own "Providers" UI (`Migrate hub → Providers → Connect vSphere`) as an alternative to the CLI config above. Transiva's connect form assumes `https://` for a bare `host:port`, so the **vCenter Host** field must always have an explicit scheme matching how the target Chimera is actually running:
 
-- vCenter Host: `http://<chimera-host>:8989` (or the full `http://<chimera-host>:8989/sdk`)
+- `CHIMERA_TLS` unset/`false` (the default): `http://<chimera-host>:8989` — a bare `host:port` here fails with `server gave HTTP response to HTTPS client`.
+- `CHIMERA_TLS=true`: `https://<chimera-host>:8989` — using `http://` here instead fails differently, with `POST "/sdk": 400 Bad Request` (Chimera's listener speaks TLS only, no plain-HTTP fallback on the same port). **A previously-saved credential doesn't update itself if you flip `CHIMERA_TLS` later** — delete and reconnect it with the corrected scheme.
+
+Either way:
+
 - Username: `administrator@vsphere.local`
 - Password: `vmware`
 - Datacenter: `DC0`
+
+Chimera's self-signed cert works with the CLI config path because the generated YAML sets `insecure: true`. Whether Transiva's *web* connect form has an equivalent way to skip certificate verification is between you and Transiva's own connect-form code (outside this repo) — if `https://` still fails after fixing the scheme, that's the next thing to check, not a Chimera-side issue.
 
 Once connected, VM discovery for that provider goes through Transiva's `GET /api/providers/vms?provider=vsphere` (not the legacy `/vms/list`), so navigate to the **VMs** tab or **Migrate hub** to see Chimera's simulated inventory rather than expecting it on the connect dialog itself.
 
