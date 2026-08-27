@@ -1,13 +1,10 @@
 package config
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -31,17 +28,11 @@ type Config struct {
 	AdminToken   string        `json:"admin_token"`
 	// AdminUsername/AdminPassword gate the Chimera dashboard's own login —
 	// distinct from Username/Password above, which are the simulated
-	// vCenter login used by API clients like govc/hyperexport. An empty
-	// AdminPassword after Load() means "generate and persist one" — see
-	// loadOrGenerateAdminPassword.
-	AdminUsername string `json:"admin_username"`
-	AdminPassword string `json:"admin_password"`
-	// AdminPasswordFile is set by Load() when AdminPassword was generated
-	// (not explicitly configured), so callers can tell the operator where
-	// it's persisted. Not read from config/env.
-	AdminPasswordFile string `json:"-"`
-	FixtureVMDK       string `json:"fixture_vmdk"`
-	FixtureVMDKDir    string `json:"fixture_vmdk_dir"`
+	// vCenter login used by API clients like govc/hyperexport.
+	AdminUsername  string `json:"admin_username"`
+	AdminPassword  string `json:"admin_password"`
+	FixtureVMDK    string `json:"fixture_vmdk"`
+	FixtureVMDKDir string `json:"fixture_vmdk_dir"`
 	// FixtureVMDKDirs are additional, read-only directories scanned the same
 	// way as FixtureVMDKDir — browser uploads always land in FixtureVMDKDir,
 	// these only ever contribute files an operator staged directly on disk.
@@ -66,7 +57,7 @@ func Default() Config {
 		SOAPDelayMS:    0,
 		AdminToken:     "chimera-admin",
 		AdminUsername:  "admin",
-		AdminPassword:  "", // generated and persisted on first boot if left unset — see Load
+		AdminPassword:  "admin",
 		FixtureVMDK:    "",
 		FixtureVMDKDir: "",
 		FixtureSizeMB:  16,
@@ -85,66 +76,11 @@ func Load(path string) (Config, error) {
 		}
 	}
 	applyEnv(&cfg)
-	if strings.TrimSpace(cfg.AdminPassword) == "" {
-		pw, file, err := loadOrGenerateAdminPassword()
-		if err != nil {
-			return cfg, fmt.Errorf("admin password: %w", err)
-		}
-		cfg.AdminPassword = pw
-		cfg.AdminPasswordFile = file
-	}
 	cfg.SOAPDelay = time.Duration(cfg.SOAPDelayMS) * time.Millisecond
 	if err := cfg.Validate(); err != nil {
 		return cfg, err
 	}
 	return cfg, nil
-}
-
-// loadOrGenerateAdminPassword returns a persisted admin password, generating
-// and saving a new random one on first use. Under systemd (with
-// StateDirectory=chimera in the unit) this persists to $STATE_DIRECTORY, so
-// it survives restarts instead of rotating on every boot; otherwise it falls
-// back to the OS user-config directory for local/dev runs.
-func loadOrGenerateAdminPassword() (password, path string, err error) {
-	path, err = adminPasswordStatePath()
-	if err != nil {
-		return "", "", err
-	}
-	if b, err := os.ReadFile(path); err == nil {
-		if pw := strings.TrimSpace(string(b)); pw != "" {
-			return pw, path, nil
-		}
-	}
-	pw, err := randomPassword()
-	if err != nil {
-		return "", "", err
-	}
-	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
-		return "", "", err
-	}
-	if err := os.WriteFile(path, []byte(pw+"\n"), 0600); err != nil {
-		return "", "", err
-	}
-	return pw, path, nil
-}
-
-func adminPasswordStatePath() (string, error) {
-	if dir := os.Getenv("STATE_DIRECTORY"); dir != "" {
-		return filepath.Join(dir, "admin-password"), nil
-	}
-	dir, err := os.UserConfigDir()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(dir, "chimera", "admin-password"), nil
-}
-
-func randomPassword() (string, error) {
-	b := make([]byte, 12)
-	if _, err := rand.Read(b); err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(b), nil
 }
 
 func (c Config) Validate() error {
@@ -154,8 +90,8 @@ func (c Config) Validate() error {
 	if c.Username == "" || c.Password == "" {
 		return errors.New("username and password are required")
 	}
-	if c.AdminUsername == "" {
-		return errors.New("admin_username is required")
+	if c.AdminUsername == "" || c.AdminPassword == "" {
+		return errors.New("admin_username and admin_password are required")
 	}
 	if c.Datacenters < 1 || c.Datastores < 1 || c.VMsPerPool < 1 {
 		return errors.New("datacenters, datastores, and vms_per_pool must be >= 1")

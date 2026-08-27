@@ -109,7 +109,6 @@ make run
 69. Unauthenticated `POST /__chimera/api/vmdks/upload` is rejected (401); a valid upload with an explicit `vm_name` lands on disk and is reported `manual`; a non-`.vmdk` filename is rejected (400).
 70. `GET /__chimera/api/vmdks/browse` lists files/subdirectories under a configured fixture root; a `..`-path-traversal attempt is rejected (400) — the browser can never reveal a path outside the configured roots, even via a symlink.
 71. `POST /__chimera/api/vmdks/assign` pins a file already on disk to a VM without re-uploading it, and is rejected unauthenticated.
-72. `POST /__chimera/login` accepts the configured admin username/password and returns the same bearer token every other protected endpoint expects; wrong credentials return 401.
-75. With `CHIMERA_ADMIN_PASSWORD` unset, `Load()` generates a random admin password on first use, persists it, and reuses the same one on a subsequent `Load()` rather than rotating it; an explicitly configured password is used as-is and nothing is written to disk.
+72. `POST /__chimera/login` accepts the configured username/password (default `admin`/`admin`) and returns the same bearer token every other protected endpoint expects; wrong credentials return 401.
 73. `POST /__chimera/admin/credentials` (authenticated) changes the live admin login; the old credentials then fail `/login` and the new ones succeed. Unauthenticated calls are rejected.
 74. `GET /` redirects (302) to `/__chimera/`.
