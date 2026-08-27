@@ -96,9 +96,11 @@ The sidebar health ring derives a simple health score from current error rate an
 
 ## Authentication model
 
-The dashboard and read-only health/bootstrap/inventory/telemetry/vmdks endpoints are public inside the disposable lab. Mutating controls require logging in through a real username/password form (default `admin`/`admin`) — this wraps the same admin bearer token every protected API call has always used: `POST /__chimera/login` checks the credentials (constant-time comparison, no lockout/rate-limiting — this is a test-lab tool, not a hardened auth system) and hands back the token on success, which the dashboard then sends as `Authorization: Bearer <token>` exactly as before.
+The dashboard and read-only health/bootstrap/inventory/telemetry/vmdks endpoints are public inside the disposable lab. Mutating controls require logging in through a real username/password form — this wraps the same admin bearer token every protected API call has always used: `POST /__chimera/login` checks the credentials (constant-time comparison, no lockout/rate-limiting — this is a test-lab tool, not a hardened auth system) and hands back the token on success, which the dashboard then sends as `Authorization: Bearer <token>` exactly as before.
 
-The browser stores the token only in `sessionStorage`, so it disappears when the browser session closes. The admin login itself (not the token) can be changed live from the Settings panel, or via `CHIMERA_ADMIN_USERNAME`/`CHIMERA_ADMIN_PASSWORD` at startup — see the README's Configuration table.
+There is no fixed default password. Username defaults to `admin` (not a secret); if `CHIMERA_ADMIN_PASSWORD` isn't set, Chimera generates a random one on first boot, persists it (so restarts reuse it instead of rotating), and prints it in the startup banner — see the README's Quick Start. Set `CHIMERA_ADMIN_USERNAME`/`CHIMERA_ADMIN_PASSWORD` yourself to skip generation entirely.
+
+The browser stores the token only in `sessionStorage`, so it disappears when the browser session closes. The admin login itself (not the token) can also be changed live from the Settings panel.
 
 ### Settings panel
 

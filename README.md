@@ -32,7 +32,7 @@ The embedded, zero-dependency dashboard is a full infrastructure command center:
 - VMDK Library: upload a `.vmdk` straight from the browser, or browse and pin a file already staged on the host — with an optional manual VM assignment that overrides the automatic name/round-robin matching. `fixture_vmdk_dir` scanning recurses into subdirectories and supports additional read-only watch directories
 - deterministic scenario launcher for clean, slow, flaky and resume paths
 - slide-over Fault Studio for latency, status codes, API/NFC failures, stream drops and bandwidth caps
-- real username/password login (default `admin`/`admin`, changeable from the dashboard's Settings panel) gating every mutating control
+- real username/password login gating every mutating control — a random password is generated and persisted on first boot (printed at startup), or set your own; changeable live from the dashboard's Settings panel
 - a Settings panel showing the listen address and letting an operator change the admin login live, no restart needed
 - responsive desktop/tablet/mobile UI
 - no Node/npm runtime and no external CDN dependencies
@@ -54,7 +54,7 @@ See [`docs/UX.md`](docs/UX.md).
 - HTTP `Range` / 206 resume behavior
 - deterministic connection drops, 4xx/5xx faults, latency and bandwidth limits
 - self-signed HTTPS option (`CHIMERA_TLS=true`)
-- admin health/state/scenario APIs, gated by a real login (default `admin`/`admin`, changeable)
+- admin health/state/scenario APIs, gated by a real login (random password generated on first boot, or your own)
 
 ### Persona roadmap
 
@@ -107,12 +107,13 @@ Chimera ready
   username: administrator@vsphere.local
   password: vmware
   admin:    http://localhost:8989/__chimera/
-  login:    admin / admin
+  login:    admin / 8cfef03e3d9a793d31b228c6
+            (generated; persisted at ~/.config/chimera/admin-password, reused on restart)
   token:    chimera-admin
   sample VM path: /DC0/vm/DC0_C0_RP0_VM0
-  ⚠ Using default admin credentials (admin/admin), reachable on all interfaces by default —
-    set CHIMERA_ADMIN_USERNAME/CHIMERA_ADMIN_PASSWORD (or change it in the dashboard's Settings) to change them.
 ```
+
+The admin password is random per install — that's a real generated example, not a literal default; yours will differ. It's generated once on first boot and reused across restarts (persisted under `$STATE_DIRECTORY` when run via the systemd unit, `~/.config/chimera/` otherwise); set `CHIMERA_ADMIN_PASSWORD` yourself to skip generation entirely.
 
 Open the Command Center — `/` also redirects here:
 
@@ -120,7 +121,7 @@ Open the Command Center — `/` also redirects here:
 http://localhost:8989/__chimera/
 ```
 
-The dashboard's read-only views (health, bootstrap, inventory, telemetry, VMDK list) are public in the disposable lab. Mutating controls require logging in — default `admin`/`admin`, printed at startup and changeable from the dashboard's Settings panel or `CHIMERA_ADMIN_USERNAME`/`CHIMERA_ADMIN_PASSWORD`. Chimera listens on `0.0.0.0` by default, so change these before exposing an instance beyond your own machine.
+The dashboard's read-only views (health, bootstrap, inventory, telemetry, VMDK list) are public in the disposable lab. Mutating controls require logging in with the username/password from the banner above — changeable live from the dashboard's Settings panel, or via `CHIMERA_ADMIN_USERNAME`/`CHIMERA_ADMIN_PASSWORD`. Chimera listens on `0.0.0.0` by default, so keep that login somewhere safe before exposing an instance beyond your own machine.
 
 Run the end-to-end client probe:
 
@@ -214,7 +215,7 @@ CHIMERA_FIXTURE_VMDK_DIR=./fixtures ./bin/chimera serve -listen 0.0.0.0:8989
 | `soap_delay_ms` | `CHIMERA_SOAP_DELAY_MS` | `0` |
 | `admin_token` | `CHIMERA_ADMIN_TOKEN` | `chimera-admin` |
 | `admin_username` | `CHIMERA_ADMIN_USERNAME` | `admin` |
-| `admin_password` | `CHIMERA_ADMIN_PASSWORD` | `admin` |
+| `admin_password` | `CHIMERA_ADMIN_PASSWORD` | generated on first boot, persisted |
 | `fixture_vmdk` | `CHIMERA_FIXTURE_VMDK` | generated fixture |
 | `fixture_vmdk_dir` | `CHIMERA_FIXTURE_VMDK_DIR` | generated fixture |
 | `fixture_vmdk_dirs` | `CHIMERA_FIXTURE_VMDK_DIRS` (comma-separated) | none |
@@ -237,7 +238,7 @@ POST /__chimera/login
 
 `GET /__chimera/api/telemetry` returns gateway-derived live metrics and a bounded recent-request feed. Dashboard polling under `/__chimera` is intentionally excluded from those counters so the UI does not create its own traffic metrics.
 
-`POST /__chimera/login` exchanges an `{"username","password"}` body (default `admin`/`admin`) for the admin bearer token — this is what the dashboard's login form calls; scripts can call it directly too, or just use the token printed at startup.
+`POST /__chimera/login` exchanges an `{"username","password"}` body (see the startup banner for the current login — username defaults to `admin`, the password is randomly generated on first boot unless you set one) for the admin bearer token — this is what the dashboard's login form calls; scripts can call it directly too, or just use the token printed at startup.
 
 Every other endpoint is protected and requires:
 

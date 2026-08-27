@@ -219,6 +219,7 @@ ExecStart=/usr/local/bin/chimera serve
 Restart=on-failure
 RestartSec=5s
 DynamicUser=yes
+StateDirectory=chimera
 NoNewPrivileges=yes
 ProtectSystem=strict
 ProtectHome=yes
