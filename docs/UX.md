@@ -29,7 +29,7 @@ Dashboard polling under `/__chimera` is excluded from these counters, so Chimera
 
 ### Infrastructure topology
 
-A visual datacenter → cluster → host → datastore map gives the operator an immediate mental model of the current simulator estate. Labels are hydrated from the configured simulator counts and fixture size.
+A visual datacenter → cluster → host → datastore map gives the operator an immediate mental model of the current simulator estate. Labels are hydrated from the configured simulator counts and fixture size. "View Full Topology" expands the same live diagram into a full-viewport overlay (dismissed via its own button, clicking outside it, or Escape); the toolbar's `Fit`/`+` controls reset or step up the zoom level.
 
 ### Top activity
 
@@ -47,14 +47,21 @@ The inventory table supports:
 - power-state filter
 - pagination
 - CPU, memory, disk and datastore columns
-- a Fixture column showing whether each VM's export uses a real VMDK (`Matched`, `Round-robin`, `Shared`) or the default generated synthetic fixture (`Synthetic`), hover for the filename
+- a Fixture column showing whether each VM's export uses a real VMDK (`Matched`, `Round-robin`, `Shared`, `Manual`) or the default generated synthetic fixture (`Synthetic`), hover for the filename
 - export target selection/copy action
 
 Rows reflect the real govmomi simulator inventory (name, power state, datastore), not a fabricated count.
 
 ### VMDK Library
 
-A dedicated card lists every `.vmdk` file found under `CHIMERA_FIXTURE_VMDK_DIR` (when configured), with its size and which VM (if any) it was assigned to — including files that matched no VM, which don't otherwise show up anywhere in the VM-keyed inventory table. The directory is re-scanned automatically every 5 seconds, so adding or removing a file shows up here without restarting the server. See `docs/TRANSIVA.md`'s "Testing conversion, not just transfer" section for the directory-matching rules.
+A dedicated card lists every `.vmdk` file found under `fixture_vmdk_dir` and any configured `fixture_vmdk_dirs` (recursing into subdirectories), with its size and which VM (if any) it was assigned to — including files that matched no VM, which don't otherwise show up anywhere in the VM-keyed inventory table. The directories are re-scanned automatically every 5 seconds, so adding or removing a file anywhere under them shows up here without restarting the server. See `docs/TRANSIVA.md`'s "Testing conversion, not just transfer" section for the matching rules.
+
+The "Upload VMDK" button opens a modal with two ways to add a fixture without touching the host's shell:
+
+- **Upload** a `.vmdk` from the browser straight into `fixture_vmdk_dir`.
+- **Browse** files already staged on the host under any configured fixture root and pick one — this only ever lists what's inside those specific directories, never an arbitrary host path.
+
+Either path can optionally pin the file to a specific VM, which overrides the automatic name/round-robin matching (shown as the `Manual` fixture badge) until cleared.
 
 ### Provider personas
 
@@ -89,9 +96,13 @@ The sidebar health ring derives a simple health score from current error rate an
 
 ## Authentication model
 
-The dashboard and read-only health/bootstrap/inventory/telemetry/vmdks endpoints are public inside the disposable lab. Mutating controls require the admin bearer token printed by `chimera serve`.
+The dashboard and read-only health/bootstrap/inventory/telemetry/vmdks endpoints are public inside the disposable lab. Mutating controls require logging in through a real username/password form (default `admin`/`admin`) — this wraps the same admin bearer token every protected API call has always used: `POST /__chimera/login` checks the credentials (constant-time comparison, no lockout/rate-limiting — this is a test-lab tool, not a hardened auth system) and hands back the token on success, which the dashboard then sends as `Authorization: Bearer <token>` exactly as before.
 
-The browser stores the token only in `sessionStorage`, so it disappears when the browser session closes.
+The browser stores the token only in `sessionStorage`, so it disappears when the browser session closes. The admin login itself (not the token) can be changed live from the Settings panel, or via `CHIMERA_ADMIN_USERNAME`/`CHIMERA_ADMIN_PASSWORD` at startup — see the README's Configuration table.
+
+### Settings panel
+
+Opened from the sidebar's "Settings" or "Users & Auth" entries (both point at the same panel — Chimera has one shared admin login, not a multi-user directory). Shows the configured listen address read-only (changing it needs `CHIMERA_LISTEN` and a restart) and a form to change the admin username/password live, no restart needed.
 
 ## Backend endpoints used by the UX
 
@@ -101,18 +112,23 @@ GET  /__chimera/api/bootstrap
 GET  /__chimera/api/inventory
 GET  /__chimera/api/vmdks
 GET  /__chimera/api/telemetry
+POST /__chimera/login
 GET  /__chimera/state
 POST /__chimera/faults
 POST /__chimera/reset
 POST /__chimera/scenario/{clean|slow|flaky|resume}
+POST /__chimera/admin/credentials
+POST /__chimera/api/vmdks/upload
+GET  /__chimera/api/vmdks/browse
+POST /__chimera/api/vmdks/assign
 ```
 
 ## Responsive behavior
 
-- full three-column command center on large desktops
-- topology/activity + full-width request feed on medium screens
+- Topology, Top Activity and Live Requests each render as a full-width stacked panel rather than competing for a narrow column, so every panel gets real reading room at any desktop width
+- the sidebar can be manually folded to an icon-only rail via its own toggle (persisted in `localStorage`), independent of viewport size
 - single-column workbench on tablets
-- collapsed icon-only sidebar and simplified controls on small screens
+- collapsed icon-only sidebar (automatic, not just the manual fold) and simplified controls on small screens
 
 ## Future UX additions
 

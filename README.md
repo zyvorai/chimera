@@ -22,17 +22,18 @@ Open `http://localhost:8989/__chimera/` after starting the engine.
 
 The embedded, zero-dependency dashboard is a full infrastructure command center:
 
-- premium dark control-plane shell with provider-persona navigation
+- premium dark control-plane shell with provider-persona navigation, a foldable sidebar, and full-width stacked panels for readability
 - six live KPIs: requests, error rate, active sessions, transferred bytes, exports and response latency
 - simulator health ring, uptime and build/version status
-- visual datacenter → cluster → host → datastore topology
+- visual datacenter → cluster → host → datastore topology, with a full-screen zoomable view
 - traffic-activity donut driven by real gateway request classes
 - live request feed with method, path, HTTP status and duration
 - searchable/paginated VM inventory with power-state filters, export selection, and a per-VM Fixture badge (real file vs. synthetic)
-- VMDK Library panel showing every fixture file and which VM it's assigned to, live-updated as files are added/removed
+- VMDK Library: upload a `.vmdk` straight from the browser, or browse and pin a file already staged on the host — with an optional manual VM assignment that overrides the automatic name/round-robin matching. `fixture_vmdk_dir` scanning recurses into subdirectories and supports additional read-only watch directories
 - deterministic scenario launcher for clean, slow, flaky and resume paths
 - slide-over Fault Studio for latency, status codes, API/NFC failures, stream drops and bandwidth caps
-- session-only admin-token unlock flow
+- real username/password login (default `admin`/`admin`, changeable from the dashboard's Settings panel) gating every mutating control
+- a Settings panel showing the listen address and letting an operator change the admin login live, no restart needed
 - responsive desktop/tablet/mobile UI
 - no Node/npm runtime and no external CDN dependencies
 
@@ -52,8 +53,8 @@ See [`docs/UX.md`](docs/UX.md).
 - NFC download URLs
 - HTTP `Range` / 206 resume behavior
 - deterministic connection drops, 4xx/5xx faults, latency and bandwidth limits
-- self-signed HTTPS option
-- admin health/state/scenario APIs
+- self-signed HTTPS option (`CHIMERA_TLS=true`)
+- admin health/state/scenario APIs, gated by a real login (default `admin`/`admin`, changeable)
 
 ### Persona roadmap
 
@@ -82,7 +83,7 @@ sudo dnf install ./chimera-*.rpm   # Fedora/RHEL/Alma
 sudo systemctl enable --now chimera
 ```
 
-This installs the binary to `/usr/bin/chimera`, a systemd unit (`systemd/chimera.service`), and an env file at `/etc/chimera/chimera.env`.
+This installs the binary to `/usr/bin/chimera`, a systemd unit (`systemd/chimera.service`), and an env file at `/etc/chimera/chimera.env`. Logs go to the journal (`journalctl -u chimera` or `-t chimera`).
 
 **Remote host, from source**: `./scripts/deploy-remote.sh <host> [user]` cross-compiles and installs Chimera as a systemd service over SSH — no Go toolchain needed on the target. See `--help` for options.
 
@@ -106,17 +107,20 @@ Chimera ready
   username: administrator@vsphere.local
   password: vmware
   admin:    http://localhost:8989/__chimera/
+  login:    admin / admin
   token:    chimera-admin
   sample VM path: /DC0/vm/DC0_C0_RP0_VM0
+  ⚠ Using default admin credentials (admin/admin), reachable on all interfaces by default —
+    set CHIMERA_ADMIN_USERNAME/CHIMERA_ADMIN_PASSWORD (or change it in the dashboard's Settings) to change them.
 ```
 
-Open the Command Center:
+Open the Command Center — `/` also redirects here:
 
 ```text
 http://localhost:8989/__chimera/
 ```
 
-The dashboard itself is public in the disposable lab. Mutating controls are protected with the admin token printed by `chimera serve`.
+The dashboard's read-only views (health, bootstrap, inventory, telemetry, VMDK list) are public in the disposable lab. Mutating controls require logging in — default `admin`/`admin`, printed at startup and changeable from the dashboard's Settings panel or `CHIMERA_ADMIN_USERNAME`/`CHIMERA_ADMIN_PASSWORD`. Chimera listens on `0.0.0.0` by default, so change these before exposing an instance beyond your own machine.
 
 Run the end-to-end client probe:
 
@@ -177,7 +181,11 @@ CHIMERA_FIXTURE_VMDK_DIR=/lab/fixtures \
 ./bin/chimera serve -listen 0.0.0.0:8989
 ```
 
-Matching is two-pass: a file named after a VM (e.g. `DC0_C0_RP0_VM0.vmdk`) is assigned to that VM; any leftover files and VMs are then paired off in sorted order. VMs that still get nothing keep the default generated fixture. Mutually exclusive with `fixture_vmdk`. The directory is re-scanned automatically every 5 seconds — drop in (or remove) a file and it's picked up without restarting the server. See the VMDK Library panel in the Command Center, or `GET /__chimera/api/vmdks`, to see the resulting assignment.
+Matching is a three-pass process: any file explicitly pinned to a VM (see "Manual assignment" below) wins first; then a file named after a VM (e.g. `DC0_C0_RP0_VM0.vmdk`, matched on its own basename even when nested in a subdirectory) is assigned to that VM; any leftover files and VMs are then paired off in sorted order. VMs that still get nothing keep the default generated fixture. Mutually exclusive with `fixture_vmdk`. The directory is scanned **recursively** and re-scanned automatically every 5 seconds — drop in (or remove) a file anywhere under it, at any depth, and it's picked up without restarting the server. See the VMDK Library panel in the Command Center, or `GET /__chimera/api/vmdks`, to see the resulting assignment.
+
+Additional read-only directories can be scanned the same way via `fixture_vmdk_dirs` / `CHIMERA_FIXTURE_VMDK_DIRS` (comma-separated) — useful when fixtures live in more than one place on the host. Uploads through the dashboard always land in the primary `fixture_vmdk_dir`; the extra directories only ever contribute files an operator staged there directly.
+
+**Manual assignment** — from the dashboard's VMDK Library card, either upload a `.vmdk` directly from the browser, or browse and pick a file already staged on the host, and optionally assign it to a specific VM. That assignment overrides the automatic name/round-robin matching (reported as `manual` in `GET /__chimera/api/vmdks`) until cleared. The host browser is hard-scoped to the configured fixture directories — it can never reveal an arbitrary path on the host.
 
 Don't have a real VMDK handy? `make fixtures` fetches a small, official, checksummed Alpine Linux cloud image and converts it to VMDK automatically (see `scripts/fetch-sample-fixtures.sh`):
 
@@ -192,7 +200,7 @@ CHIMERA_FIXTURE_VMDK_DIR=./fixtures ./bin/chimera serve -listen 0.0.0.0:8989
 
 | JSON | Environment | Default |
 |---|---|---:|
-| `listen` | `CHIMERA_LISTEN` | `127.0.0.1:8989` |
+| `listen` | `CHIMERA_LISTEN` | `0.0.0.0:8989` |
 | `public_host` | `CHIMERA_PUBLIC_HOST` | listener address |
 | `tls` | `CHIMERA_TLS` | `false` |
 | `username` | `CHIMERA_USERNAME` | `administrator@vsphere.local` |
@@ -205,25 +213,33 @@ CHIMERA_FIXTURE_VMDK_DIR=./fixtures ./bin/chimera serve -listen 0.0.0.0:8989
 | `vms_per_pool` | `CHIMERA_VMS_PER_POOL` | `3` |
 | `soap_delay_ms` | `CHIMERA_SOAP_DELAY_MS` | `0` |
 | `admin_token` | `CHIMERA_ADMIN_TOKEN` | `chimera-admin` |
+| `admin_username` | `CHIMERA_ADMIN_USERNAME` | `admin` |
+| `admin_password` | `CHIMERA_ADMIN_PASSWORD` | `admin` |
 | `fixture_vmdk` | `CHIMERA_FIXTURE_VMDK` | generated fixture |
 | `fixture_vmdk_dir` | `CHIMERA_FIXTURE_VMDK_DIR` | generated fixture |
+| `fixture_vmdk_dirs` | `CHIMERA_FIXTURE_VMDK_DIRS` (comma-separated) | none |
 | `fixture_size_mb` | `CHIMERA_FIXTURE_SIZE_MB` | `16` |
+
+`username`/`password` are the simulated vCenter login used by API clients (govc, Transiva, etc.) — unrelated to `admin_username`/`admin_password`, which gate the Chimera dashboard's own login.
 
 ## Admin APIs
 
-Public read endpoints:
+Public read endpoints (plus the login exchange below):
 
 ```text
-GET /__chimera/health
-GET /__chimera/api/bootstrap
-GET /__chimera/api/inventory
-GET /__chimera/api/vmdks
-GET /__chimera/api/telemetry
+GET  /__chimera/health
+GET  /__chimera/api/bootstrap
+GET  /__chimera/api/inventory
+GET  /__chimera/api/vmdks
+GET  /__chimera/api/telemetry
+POST /__chimera/login
 ```
 
 `GET /__chimera/api/telemetry` returns gateway-derived live metrics and a bounded recent-request feed. Dashboard polling under `/__chimera` is intentionally excluded from those counters so the UI does not create its own traffic metrics.
 
-Protected endpoints require:
+`POST /__chimera/login` exchanges an `{"username","password"}` body (default `admin`/`admin`) for the admin bearer token — this is what the dashboard's login form calls; scripts can call it directly too, or just use the token printed at startup.
+
+Every other endpoint is protected and requires:
 
 ```text
 Authorization: Bearer chimera-admin
@@ -239,6 +255,10 @@ POST /__chimera/scenario/clean
 POST /__chimera/scenario/slow
 POST /__chimera/scenario/flaky
 POST /__chimera/scenario/resume
+POST /__chimera/admin/credentials       # change the dashboard login: {"username","password"}
+POST /__chimera/api/vmdks/upload        # multipart "file" (+optional "vm_name") into fixture_vmdk_dir
+GET  /__chimera/api/vmdks/browse        # ?root=<index>&path=<relative> — list files under a configured fixture root
+POST /__chimera/api/vmdks/assign        # {"root","file_name","vm_name"} — pin a file already on disk to a VM
 ```
 
 Example fault policy:

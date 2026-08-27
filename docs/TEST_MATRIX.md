@@ -99,3 +99,16 @@ make run
 62. `/__chimera/api/vmdks` lists every `.vmdk` file in the configured directory with its assignment method, including files that matched no VM.
 63. A real fixture image fetched via `make fixtures` round-trips through `qemu-img info` as a valid disk image, confirmed via `scripts/verify-real-fixture.sh` (downloads the complete export via `chimera selftest -vm <name> -save <path>`, not just the default 4KB probe).
 64. `fixture_vmdk_dir` is re-scanned automatically (every 5s) — a VMDK added after startup is picked up and assigned without restarting the server.
+65. Scanning recurses into subdirectories; name-match keys off the file's own basename, not its full relative path, so nesting doesn't break matching.
+66. `fixture_vmdk_dirs` (additional read-only roots) are scanned and matched the same way as `fixture_vmdk_dir`; browser uploads always land only in the primary directory.
+67. A file with the same relative name in two different fixture roots doesn't collide — override keys are unique per root.
+68. `SetOverride`/`ClearOverride` (manual assignment) take priority over name-match/round-robin, are reported as method `manual`, and reject an unknown VM name.
+
+## Dashboard upload/browse/assign and login (`internal/gateway`)
+
+69. Unauthenticated `POST /__chimera/api/vmdks/upload` is rejected (401); a valid upload with an explicit `vm_name` lands on disk and is reported `manual`; a non-`.vmdk` filename is rejected (400).
+70. `GET /__chimera/api/vmdks/browse` lists files/subdirectories under a configured fixture root; a `..`-path-traversal attempt is rejected (400) — the browser can never reveal a path outside the configured roots, even via a symlink.
+71. `POST /__chimera/api/vmdks/assign` pins a file already on disk to a VM without re-uploading it, and is rejected unauthenticated.
+72. `POST /__chimera/login` accepts the configured username/password (default `admin`/`admin`) and returns the same bearer token every other protected endpoint expects; wrong credentials return 401.
+73. `POST /__chimera/admin/credentials` (authenticated) changes the live admin login; the old credentials then fail `/login` and the new ones succeed. Unauthenticated calls are rejected.
+74. `GET /` redirects (302) to `/__chimera/`.

@@ -13,6 +13,9 @@ DynamicUser=yes
 NoNewPrivileges=yes
 ProtectSystem=strict
 ProtectHome=yes
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=chimera
 
 [Install]
 WantedBy=multi-user.target

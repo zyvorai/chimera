@@ -118,7 +118,9 @@ export CHIMERA_FIXTURE_VMDK_DIR=/path/to/vmdks
 ./bin/chimera serve -listen 0.0.0.0:8989
 ```
 
-Matching is two-pass: a file whose name (minus extension) matches a VM's name — e.g. `DC0_C0_RP0_VM0.vmdk` — is assigned to that VM; any leftover files and leftover VMs are then paired off in sorted order. VMs that still get nothing keep the default generated synthetic fixture. `CHIMERA_FIXTURE_VMDK` and `CHIMERA_FIXTURE_VMDK_DIR` are mutually exclusive. The directory is re-scanned automatically every 5 seconds, so dropping in (or removing) a VMDK is picked up without restarting the server. See the VMDK Library card and the Fixture column in the dashboard's Inventory table (`http://localhost:8989/__chimera/`) to see which VM got which file, and `GET /__chimera/api/vmdks` for the same data as JSON.
+Matching is a three-pass process: a file explicitly pinned to a VM from the dashboard (upload or host browser) wins first; then a file whose name (minus extension) matches a VM's name — e.g. `DC0_C0_RP0_VM0.vmdk`, matched on its own basename even if nested in a subdirectory — is assigned to that VM; any leftover files and leftover VMs are then paired off in sorted order. VMs that still get nothing keep the default generated synthetic fixture. `CHIMERA_FIXTURE_VMDK` and `CHIMERA_FIXTURE_VMDK_DIR`/`CHIMERA_FIXTURE_VMDK_DIRS` are mutually exclusive. The directory (and any `CHIMERA_FIXTURE_VMDK_DIRS` additions) is scanned recursively and re-scanned automatically every 5 seconds, so dropping in (or removing) a VMDK anywhere under it is picked up without restarting the server. See the VMDK Library card and the Fixture column in the dashboard's Inventory table (`http://localhost:8989/__chimera/`) to see which VM got which file, and `GET /__chimera/api/vmdks` for the same data as JSON.
+
+Don't need shell/SSH access to place the file at all — the VMDK Library card's "Upload VMDK" button can upload a `.vmdk` straight from the browser, or browse and pin one already staged on the host, with an optional explicit VM assignment.
 
 Don't have a real VMDK handy? `make fixtures` (`scripts/fetch-sample-fixtures.sh`) fetches a small, official, checksummed Alpine Linux cloud image and converts it to VMDK automatically — so the export path serves a genuinely real, valid disk image out of the box instead of the generated filler bytes. `scripts/verify-real-fixture.sh` proves this end-to-end: it downloads the *complete* exported disk (via `chimera selftest -vm <name> -save <path>`, not just the default 4KB probe) and confirms `qemu-img info` recognizes it as a valid image.
 
@@ -132,6 +134,16 @@ Transiva's daemon (`transivad`) also has its own "Providers" UI (`Migrate hub �
 - Datacenter: `DC0`
 
 Once connected, VM discovery for that provider goes through Transiva's `GET /api/providers/vms?provider=vsphere` (not the legacy `/vms/list`), so navigate to the **VMs** tab or **Migrate hub** to see Chimera's simulated inventory rather than expecting it on the connect dialog itself.
+
+## Running Chimera with TLS
+
+Set `CHIMERA_TLS=true` to have Chimera serve a self-signed HTTPS listener instead of plain HTTP — the same port switches entirely to TLS (no plain-HTTP fallback on that port). To point Transiva at it:
+
+- CLI config: `vcenter_url: "https://<chimera-host>:8989/sdk"` with `insecure: true` (already the default in `scripts/make-transiva-config.sh`'s generated config, since the cert is self-signed) so Transiva doesn't reject it for an untrusted CA.
+- Web dashboard connect form: `https://<chimera-host>:8989`.
+- Any `curl`/`chimera selftest` call against it needs `-k`/`-insecure=true` for the same reason.
+
+Confirmed working end-to-end this way: `chimera selftest -insecure=true` and a live Transiva instance both talking to a TLS-enabled Chimera on the same host.
 
 ## Remote/container clients
 
