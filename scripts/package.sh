@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Copyright 2026 Zyvor AI Labs
+# SPDX-License-Identifier: Apache-2.0
 # ============================================================================
 # package.sh — Build .deb and .rpm packages for chimera
 # ============================================================================

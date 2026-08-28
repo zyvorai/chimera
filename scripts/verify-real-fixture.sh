@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Copyright 2026 Zyvor AI Labs
+# SPDX-License-Identifier: Apache-2.0
 # ============================================================================
 # verify-real-fixture.sh — Prove an exported disk is real, not filler bytes
 # ============================================================================

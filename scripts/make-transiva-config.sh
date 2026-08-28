@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
+# Copyright 2026 Zyvor AI Labs
+# SPDX-License-Identifier: Apache-2.0
 set -eu
 URL="${CHIMERA_URL:-http://127.0.0.1:8989/sdk}"
 USER="${CHIMERA_USERNAME:-administrator@vsphere.local}"
