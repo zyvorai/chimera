@@ -51,11 +51,11 @@ hr{border:none;border-top:1px solid #e5e7eb;margin:1.2em 0}
 </tr>
 <tr>
 <td>Admin UI login</td>
-<td>Default <code>admin</code> / <code>admin</code>; <code>CHIMERA_ADMIN_USERNAME</code> / <code>CHIMERA_ADMIN_PASSWORD</code>; changeable in Settings</td>
+<td>Default <code>admin</code> / <code>admin</code>; <code>CHIMERA_ADMIN_USERNAME</code> / <code>CHIMERA_ADMIN_PASSWORD</code>; changeable in Settings drawer</td>
 </tr>
 <tr>
 <td>Admin API token</td>
-<td><code>admin_token</code> — default <code>chimera-admin</code></td>
+<td><code>admin_token</code> — default <code>chimera-admin</code> (Bearer for curl/scenario scripts)</td>
 </tr>
 <tr>
 <td>Fixtures</td>
@@ -99,6 +99,18 @@ hr{border:none;border-top:1px solid #e5e7eb;margin:1.2em 0}
 <td>Redirects to Command Center</td>
 </tr>
 </tbody></table>
+<p>Use <code>http(s)://&lt;host&gt;:8989/...</code> in docs and client configs — substitute your lab hostname or DNS name for <code>&lt;host&gt;</code>.</p>
+<h2>Operate from the console (UX)</h2>
+<ol>
+<li><strong>Listen address:</strong> Settings drawer (gear) → read-only bind shown at top; restart required to change <code>CHIMERA_LISTEN</code> / config <code>listen</code>.</li>
+<li><strong>Rotate UI login:</strong> Settings → new username + password → <strong>Save login</strong> → log out from user chip → sign in again.</li>
+<li><strong>Verify estate:</strong> Overview topology subtitle + Inventory VM count vs config fields above.</li>
+<li><strong>Fixture dirs:</strong> VMDK Library subtitle must show configured path; empty subtitle → set <code>fixture_vmdk_dir</code> and restart.</li>
+<li><strong>API automation:</strong> Use <code>Authorization: Bearer &lt;admin_token&gt;</code> for <code>/__chimera/scenario/*</code>, <code>/__chimera/faults</code>, <code>/__chimera/reset</code> — same privilege as an logged-in browser tab.</li>
+<li><strong>Remote clients:</strong> Footer persona strip shows public SDK URL Transiva should mirror; align <code>public_host</code> when NFC URLs must not say <code>localhost</code>.</li>
+</ol>
+<p><strong>Empty / fail:</strong> Settings save while logged out → login gate. VMDK upload 401 → sign in or pass Bearer token. Simulator login fails with correct UI admin → simulator creds are separate (<code>administrator@vsphere.local</code> / <code>vmware</code>).</p>
+<p><strong>Success:</strong> Listen matches curl/browser port; rotated admin login works; remote Transiva reaches <code>/sdk</code> on <code>&lt;host&gt;</code>.</p>
 <h2>Security notes</h2>
 <ul>
 <li>Change default admin credentials before exposing beyond a lab VLAN.</li>
@@ -106,4 +118,10 @@ hr{border:none;border-top:1px solid #e5e7eb;margin:1.2em 0}
 <li>Chimera is for <strong>test and compatibility</strong>, not production VM hosting.</li>
 </ul>
 <p>See also product-repo <code>docs/UX.md</code>, <code>docs/TRANSIVA.md</code>, <code>docs/PROVIDER_ARCHITECTURE.md</code>.</p>
+<h2>Related pages</h2>
+<ul>
+<li><a href="pages/command-center/settings.md">Settings</a></li>
+<li><a href="pages/command-center/login.md">Login</a></li>
+<li><a href="getting-started.md">Getting Started</a></li>
+</ul>
 </main></body></html>

@@ -1,1 +1,64 @@
-{"routes":[]}
+{
+  "routes": [
+    {
+      "label": "Login",
+      "path": "/login",
+      "category": "AUTH",
+      "legacy": false
+    },
+    {
+      "label": "Overview KPIs",
+      "path": "/overview",
+      "category": "COMMAND CENTER",
+      "legacy": false
+    },
+    {
+      "label": "Topology",
+      "path": "/topology",
+      "category": "COMMAND CENTER",
+      "legacy": false
+    },
+    {
+      "label": "Top Activity",
+      "path": "/activity",
+      "category": "COMMAND CENTER",
+      "legacy": false
+    },
+    {
+      "label": "Live requests",
+      "path": "/live-requests",
+      "category": "COMMAND CENTER",
+      "legacy": false
+    },
+    {
+      "label": "VM inventory",
+      "path": "/vm-inventory",
+      "category": "COMMAND CENTER",
+      "legacy": false
+    },
+    {
+      "label": "VMDK Library",
+      "path": "/vmdk-library",
+      "category": "COMMAND CENTER",
+      "legacy": false
+    },
+    {
+      "label": "Scenario Launcher",
+      "path": "/scenarios",
+      "category": "COMMAND CENTER",
+      "legacy": false
+    },
+    {
+      "label": "Fault Studio",
+      "path": "/fault-studio",
+      "category": "COMMAND CENTER",
+      "legacy": false
+    },
+    {
+      "label": "Settings",
+      "path": "/settings",
+      "category": "COMMAND CENTER",
+      "legacy": false
+    }
+  ]
+}

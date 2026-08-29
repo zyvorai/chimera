@@ -1,1 +1,12 @@
-{}
+{
+  "/login": "Authenticate the browser session before Command Center chrome or live data loads.",
+  "/overview": "Six live KPIs — requests, error rate, sessions, bytes, exports, latency — refreshed every two seconds.",
+  "/topology": "Datacenter → cluster → host → datastore map of the configured simulator estate.",
+  "/activity": "Donut and legend grouping infrastructure traffic by operation class (SOAP, SDK, NFC).",
+  "/live-requests": "Newest infrastructure HTTP calls with method, path, status, and gateway duration.",
+  "/vm-inventory": "Searchable, paginated simulator VM table with power state, sizing, datastore, and fixture badge.",
+  "/vmdk-library": "Fixture `.vmdk` inventory — upload from browser or pick staged host files; optional VM pin.",
+  "/scenarios": "One-click presets: clean, slow fabric, flaky API, resume export.",
+  "/fault-studio": "Administrative drawer for latency, status codes, next-N failures, NFC drops, bandwidth cap.",
+  "/settings": "Read-only listen address plus live admin username/password rotation (no restart)."
+}

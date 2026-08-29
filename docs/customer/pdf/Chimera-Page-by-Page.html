@@ -29,6 +29,19 @@ hr{border:none;border-top:1px solid #e5e7eb;margin:1.2em 0}
 <main><h2>Page-by-page guides</h2>
 <p>Each guide follows: Purpose → When to use it → How to get there → Operate from the console (UX) → Related pages.</p>
 <p>Every route is also listed in the <a href="../PAGE_INDEX.md">complete page index</a>.</p>
+<h3>Auth</h3>
+<table>
+<thead>
+<tr>
+<th>Page</th>
+<th>What it covers</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="auth/login.md">Login</a></td>
+<td>Authenticate the browser session before Command Center chrome or live data loads.</td>
+</tr>
+</tbody></table>
 <h3>Command Center</h3>
 <table>
 <thead>
@@ -38,12 +51,16 @@ hr{border:none;border-top:1px solid #e5e7eb;margin:1.2em 0}
 </tr>
 </thead>
 <tbody><tr>
+<td><a href="command-center/activity.md">Top Activity</a></td>
+<td>Donut chart and legend grouping infrastructure traffic by operation class — vSphere SOAP, SDK, NFC download, NFC resume, and related gateway paths.</td>
+</tr>
+<tr>
 <td><a href="command-center/fault-studio.md">Fault Studio</a></td>
-<td>Operator drawer for latency, status codes, next-N API/NFC failures, stream drops, drop offset, and bandwidth caps.</td>
+<td>Operator drawer for latency, HTTP failure status, next-N API/NFC failures, one-shot NFC stream drops, drop offset, and bandwidth caps.</td>
 </tr>
 <tr>
 <td><a href="command-center/live-requests.md">Live requests</a></td>
-<td>Stream recent infrastructure HTTP calls: method, path, status, duration.</td>
+<td>Stream recent infrastructure HTTP calls: method, compact path, HTTP status, and end-to-end gateway duration.</td>
 </tr>
 <tr>
 <td><a href="command-center/login.md">Login</a></td>
@@ -51,15 +68,15 @@ hr{border:none;border-top:1px solid #e5e7eb;margin:1.2em 0}
 </tr>
 <tr>
 <td><a href="command-center/overview.md">Overview KPIs</a></td>
-<td>Show live gateway-derived health: requests, error rate, sessions, bytes, exports, latency.</td>
+<td>Show live gateway-derived health: requests, error rate, active sessions, bytes transferred, NFC exports, and average response latency.</td>
 </tr>
 <tr>
 <td><a href="command-center/scenarios.md">Scenario Launcher</a></td>
-<td>One-click deterministic presets for clean, slow, flaky, and resume export paths.</td>
+<td>One-click deterministic presets for clean, slow, flaky, and resume-export fault paths — without hand-tuning Fault Studio each run.</td>
 </tr>
 <tr>
 <td><a href="command-center/settings.md">Settings</a></td>
-<td>Show listen address and change Command Center admin username/password live (no restart).</td>
+<td>Show the configured listen address (read-only) and change Command Center admin username/password live — no Chimera restart required.</td>
 </tr>
 <tr>
 <td><a href="command-center/topology.md">Topology</a></td>
@@ -67,160 +84,496 @@ hr{border:none;border-top:1px solid #e5e7eb;margin:1.2em 0}
 </tr>
 <tr>
 <td><a href="command-center/vm-inventory.md">VM inventory</a></td>
-<td>Searchable, paginated table of simulator VMs with power state, CPU/memory/disk, datastore, and Fixture badge.</td>
+<td>Searchable, paginated table of simulator VMs with power state, CPU/memory/disk, datastore, and Fixture badge (real VMDK vs synthetic).</td>
 </tr>
 <tr>
 <td><a href="command-center/vmdk-library.md">VMDK Library</a></td>
-<td>List and manage <code>.vmdk</code> fixtures under configured fixture directories; upload or browse; optionally pin to a VM.</td>
+<td>List and manage <code>.vmdk</code> fixtures under configured fixture directories; upload from the browser or pick staged host files; optionally pin to a VM.</td>
 </tr>
 </tbody></table>
 <hr>
-<p>9 guides. Regenerate: <code>node scripts/customer-docs/generate-guide-index.mjs</code>.</p>
+<p>11 guides. Regenerate: <code>node scripts/customer-docs/generate-guide-index.mjs</code>.</p>
+<hr>
+<h2>Login</h2>
+<h3>Purpose</h3>
+<p>Authenticate the browser session before Command Center chrome or live data loads.</p>
+<h3>When to use it</h3>
+<ul>
+<li>Open this surface when the job matches the purpose above</li>
+<li>Start from the product home / dashboard if you are unsure where to begin</li>
+<li>Confirm auth and that required backends/operators are reachable if data looks empty</li>
+</ul>
+<h3>How to get there</h3>
+<ul>
+<li>Route / id: <code>/login</code></li>
+<li>Nav: <strong>AUTH → Login</strong> (sidebar, command palette, or desktop nav)</li>
+</ul>
+<h3>What you can do</h3>
+<ol>
+<li>Open <code>/login</code> and wait for live data from Chimera.</li>
+<li>Use filters and search when the page provides them.</li>
+<li>Drill into a row or card for detail, then jump to related surfaces.</li>
+<li>For mutating actions: review impact, role gates, and confirmation dialogs first.</li>
+</ol>
+<p>If the page stays empty, check service health, auth configuration, and that dependencies for this domain are installed.</p>
+<h3>Related pages</h3>
+<ul>
+<li><a href="../../getting-started.md">Getting Started</a></li>
+<li><a href="../../PAGE_INDEX.md">Page index</a></li>
+</ul>
+<hr>
+<h2>Top Activity</h2>
+<h3>Purpose</h3>
+<p>Donut chart and legend grouping infrastructure traffic by operation class — vSphere SOAP, SDK, NFC download, NFC resume, and related gateway paths.</p>
+<h3>When to use it</h3>
+<ul>
+<li>See <em>what kind</em> of traffic dominates during Transiva export or discovery runs</li>
+<li>Confirm NFC vs SOAP mix after resume/retry scenarios</li>
+<li>Quick sanity check when KPIs move but you need operation-level breakdown</li>
+</ul>
+<h3>How to get there</h3>
+<ul>
+<li>Screen id: <code>#activity</code></li>
+<li>Nav: <strong>Control Center → Telemetry</strong> (sidebar ∿) or scroll to <strong>Top Activity</strong> on Overview</li>
+</ul>
+<h3>Operate from the console (UX)</h3>
+<ol>
+<li>Sign in and scroll to the <strong>Top Activity</strong> card below the topology panel.</li>
+<li>Read the center total — it tracks overall request count from telemetry (same family as the Requests KPI).</li>
+<li>Inspect colored legend rows: each line shows operation name, count, and percentage share.</li>
+<li>Run <code>./bin/chimera selftest</code> or a Transiva export, then watch segments populate within ~2s polling cycles.</li>
+<li>If the donut is a flat ring with <strong>No traffic yet.</strong>, drive clients against <code>/sdk</code> — dashboard fetches do not count.</li>
+</ol>
+<p><strong>Empty / fail:</strong> <strong>No traffic yet.</strong> persists during active exports → verify Transiva <code>vcenter_url</code> points at <code>&lt;host&gt;:8989/sdk</code>, not localhost from a remote runner. Legend shows one class at 100% unexpectedly → check Fault Studio for forced failures skewing retries.</p>
+<p><strong>Success:</strong> Multiple operation classes appear with plausible percentages; total matches rising <strong>Requests</strong> KPI during a self-test or export.</p>
+<h3>Related pages</h3>
+<ul>
+<li><a href="overview.md">Overview KPIs</a></li>
+<li><a href="live-requests.md">Live requests</a></li>
+<li><a href="scenarios.md">Scenario Launcher</a></li>
+<li><a href="../../workflows.md">Workflows</a></li>
+<li><a href="../../PAGE_INDEX.md">Page index</a></li>
+</ul>
 <hr>
 <h2>Fault Studio</h2>
 <h3>Purpose</h3>
-<p>Operator drawer for latency, status codes, next-N API/NFC failures, stream drops, drop offset, and bandwidth caps.</p>
+<p>Operator drawer for latency, HTTP failure status, next-N API/NFC failures, one-shot NFC stream drops, drop offset, and bandwidth caps.</p>
 <h3>When to use it</h3>
-<p>Hardening clients (Transiva) against partial transfers and API errors.</p>
-<h3>How to get there</h3>
-<p>Top bar gear, sidebar, or scenario panel → Fault Studio drawer.</p>
-<h3>What you can do</h3>
 <ul>
-<li>Arm next-N failures or one-shot NFC stream drops</li>
-<li>Cap bandwidth; clear faults before clean runs</li>
+<li>Fine-grained fault injection beyond Scenario Launcher presets</li>
+<li>Hardening Transiva or other clients against partial transfers and API errors</li>
+<li>Inspecting and clearing active fault policy before clean benchmark runs</li>
 </ul>
-<h3>Related</h3>
-<p><a href="scenarios.md">Scenarios</a> · <a href="live-requests.md">Live requests</a></p>
+<h3>How to get there</h3>
+<ul>
+<li>Drawer id: <code>#faultDrawer</code> (not a route — slides over the console)</li>
+<li>Nav: <strong>Administration → Fault Studio</strong> (sidebar ϟ), top bar <strong>Fault Studio</strong> (bolt icon), or <strong>View Fault Studio →</strong> on Scenario Launcher</li>
+<li><strong>Settings</strong> (gear icon) is a separate drawer — do not confuse with Fault Studio</li>
+</ul>
+<h3>Operate from the console (UX)</h3>
+<ol>
+<li>Sign in — mutating fault APIs require the admin session token.</li>
+<li>Open Fault Studio from sidebar, top bar bolt, or scenario panel link.</li>
+<li>Read summary chips at top: <strong>Latency</strong>, <strong>Bandwidth</strong>, <strong>Status</strong> (current policy snapshot).</li>
+<li>Set fields as needed:<ul>
+<li><strong>Latency (ms)</strong> — artificial delay on infrastructure requests.</li>
+<li><strong>Failure HTTP status</strong> — status returned for armed failures (default 503).</li>
+<li><strong>Fail next requests</strong> — count of generic API failures before auto-clear.</li>
+<li><strong>Fail next NFC requests</strong> — NFC-specific failure budget.</li>
+<li><strong>Drop next NFC streams</strong> / <strong>Drop after (MiB)</strong> — mid-transfer disconnect for resume testing.</li>
+<li><strong>Bandwidth cap (MiB/s, 0 = unlimited)</strong> — throttle NFC throughput.</li>
+</ul>
+</li>
+<li>Click <strong>Apply policy</strong> — toast <strong>Fault policy active</strong>; watch <a href="live-requests.md">Live requests</a> for red statuses.</li>
+<li>Click <strong>Reset</strong> for a clean traffic path without reloading the page (same as Clean scenario family).</li>
+<li><strong>Unlock</strong> / <strong>Lock</strong> toggles admin token in this tab; <strong>API Tokens</strong> sidebar entry uses the same control.</li>
+<li>Close drawer with <strong>×</strong> or click the dimmed overlay.</li>
+</ol>
+<p><strong>Empty / fail:</strong> Drawer opens but <strong>Apply</strong> sends you to login → re-authenticate. Changes seem ignored → confirm toast success; some counters are consume-on-use (next-N). Bandwidth shows <strong>∞</strong> when cap is 0.</p>
+<p><strong>Success:</strong> Summary chips match inputs; injected errors appear in live request feed; <strong>Reset</strong> restores green statuses and nominal latency.</p>
+<h3>Related pages</h3>
+<ul>
+<li><a href="scenarios.md">Scenario Launcher</a></li>
+<li><a href="live-requests.md">Live requests</a></li>
+<li><a href="overview.md">Overview KPIs</a></li>
+<li><a href="../../workflows.md">Workflows</a></li>
+<li><a href="../../admin-basics.md">Admin basics</a></li>
+<li><a href="../../PAGE_INDEX.md">Page index</a></li>
+</ul>
 <hr>
 <h2>Live requests</h2>
 <h3>Purpose</h3>
-<p>Stream recent infrastructure HTTP calls: method, path, status, duration.</p>
+<p>Stream recent infrastructure HTTP calls: method, compact path, HTTP status, and end-to-end gateway duration.</p>
 <h3>When to use it</h3>
-<p>Debug govmomi / Transiva traffic and spot red status codes.</p>
-<h3>How to get there</h3>
-<p>Overview — Live requests panel. Top bar bell scrolls here.</p>
-<h3>What you can do</h3>
 <ul>
-<li>Toggle <strong>View All</strong> / <strong>View Less</strong> (10 vs 30 buffered rows)</li>
-<li>Correlate failures with Fault Studio settings</li>
+<li>Debug govmomi / Transiva traffic and spot failing calls (red status codes)</li>
+<li>Correlate Fault Studio or scenario changes with immediate API/NFC errors</li>
+<li>Audit-style tail of the newest simulator-facing requests (also linked as <strong>Sessions</strong> / <strong>Audit Logs</strong> in the sidebar)</li>
 </ul>
-<h3>Related</h3>
-<p><a href="fault-studio.md">Fault Studio</a> · <a href="overview.md">Overview KPIs</a></p>
+<h3>How to get there</h3>
+<ul>
+<li>Screen id: <code>#requests</code></li>
+<li>Nav: <strong>Control Center → Sessions</strong> or <strong>Audit Logs</strong> (sidebar), or <strong>Live Requests</strong> panel on Overview</li>
+<li>Shortcut: top bar bell (badge = current error count) scrolls directly here</li>
+</ul>
+<h3>Operate from the console (UX)</h3>
+<ol>
+<li>Sign in and open <strong>Live Requests</strong> (or click the bell when the badge is non-zero).</li>
+<li>Watch rows populate: <strong>GET</strong>/<strong>POST</strong> method chip, truncated path, green status (or red for ≥400).</li>
+<li>Compare duration column (ms) before/after <strong>Slow Fabric</strong> scenario or Fault Studio latency.</li>
+<li>Click <strong>View All</strong> to expand from 10 to 30 buffered rows (label flips to <strong>View Less</strong>); no extra API call — same server buffer.</li>
+<li>When debugging resume exports, look for NFC paths returning <strong>206</strong> after <strong>Resume Export</strong> scenario.</li>
+<li>Cross-check with <a href="fault-studio.md">Fault Studio</a> when statuses match your injected <code>fail_status</code>.</li>
+</ol>
+<p><strong>Empty / fail:</strong> <strong>Waiting for client traffic…</strong> during an export → client may be pointed at wrong host/port or TLS mismatch. All red rows → run <strong>Clean Environment</strong> scenario, then <strong>Reset</strong> in Fault Studio. Bell badge stuck high after clean run → click <strong>↻ Refresh</strong> on Overview.</p>
+<p><strong>Success:</strong> SOAP/SDK/NFC paths appear with 2xx/206 statuses on happy path; error badge clears after clean reset.</p>
+<h3>Related pages</h3>
+<ul>
+<li><a href="fault-studio.md">Fault Studio</a></li>
+<li><a href="overview.md">Overview KPIs</a></li>
+<li><a href="activity.md">Top Activity</a></li>
+<li><a href="../../workflows.md">Workflows</a></li>
+<li><a href="../../PAGE_INDEX.md">Page index</a></li>
+</ul>
 <hr>
 <h2>Login</h2>
 <h3>Purpose</h3>
 <p>Authenticate the browser session before any Command Center chrome or data is shown.</p>
 <h3>When to use it</h3>
-<p>Every new browser session. Mutating controls require login.</p>
-<h3>How to get there</h3>
-<p>Open <code>http(s)://&lt;host&gt;:8989/__chimera/</code>. Unauthenticated users see only the login page.</p>
-<h3>What you can do</h3>
 <ul>
-<li>Sign in with username/password (default <code>admin</code> / <code>admin</code>)</li>
-<li>After login, the full overview loads</li>
+<li>Every new browser tab or after <strong>Log out</strong> from the top-right user menu</li>
+<li>Before Scenario Launcher, Fault Studio writes, VMDK upload, or credential changes</li>
 </ul>
-<h3>Related</h3>
-<p><a href="settings.md">Settings</a> · <a href="../../admin-basics.md">Admin basics</a></p>
+<h3>How to get there</h3>
+<ul>
+<li>URL: <code>http(s)://&lt;host&gt;:8989/__chimera/</code></li>
+<li>Screen id: login gate (full page — no sidebar until authenticated)</li>
+</ul>
+<h3>Operate from the console (UX)</h3>
+<ol>
+<li>Open <code>http(s)://&lt;host&gt;:8989/__chimera/</code> in a browser.</li>
+<li>Confirm you see <strong>Log in to Chimera</strong> — not the overview metrics (unauthenticated users never flash inventory).</li>
+<li>Enter username and password (default <strong>admin</strong> / <strong>admin</strong> unless changed in Settings or via <code>CHIMERA_ADMIN_*</code>).</li>
+<li>Click <strong>Log in</strong> (or press Enter in the password field).</li>
+<li>Wait for the toast <strong>Logged in — Scenarios and fault injection are enabled.</strong> The sidebar, KPI row, and inventory load.</li>
+</ol>
+<p><strong>Empty / fail:</strong> <strong>Login failed</strong> toast → verify credentials in Settings (if you still have another session) or env vars on the host. Reload loops usually mean wrong password or stale token — use <strong>Log out</strong> from the user chip, then sign in again.</p>
+<p><strong>Success:</strong> Full Command Center shell appears; sidebar health ring shows uptime/version; footer shows active vSphere persona and SDK endpoint.</p>
+<p>Console: <code>http(s)://&lt;host&gt;:8989/__chimera/</code> · vSphere SDK: <code>http(s)://&lt;host&gt;:8989/sdk</code> · Never publish lab IPs — use <code>&lt;host&gt;</code>.</p>
+<h3>Related pages</h3>
+<ul>
+<li><a href="settings.md">Settings</a></li>
+<li><a href="overview.md">Overview KPIs</a></li>
+<li><a href="../../admin-basics.md">Admin basics</a></li>
+<li><a href="../../getting-started.md">Getting Started</a></li>
+<li><a href="../../PAGE_INDEX.md">Page index</a></li>
+</ul>
 <hr>
 <h2>Overview KPIs</h2>
 <h3>Purpose</h3>
-<p>Show live gateway-derived health: requests, error rate, sessions, bytes, exports, latency.</p>
+<p>Show live gateway-derived health: requests, error rate, active sessions, bytes transferred, NFC exports, and average response latency.</p>
 <h3>When to use it</h3>
-<p>First screen after login; confirm the engine is receiving infrastructure traffic.</p>
-<h3>How to get there</h3>
-<p>Command Center home — top metrics row.</p>
-<h3>What you can do</h3>
 <ul>
-<li>Refresh the window</li>
-<li>Note that <code>/__chimera</code> polling itself is excluded from counters</li>
+<li>First screen after login — confirm Chimera is receiving infrastructure traffic</li>
+<li>Before and after scenario or fault changes to watch error rate and latency move</li>
+<li>When Transiva or <code>selftest</code> runs but you need a quick “is anything happening?” check</li>
 </ul>
-<h3>Related</h3>
-<p><a href="live-requests.md">Live requests</a> · <a href="topology.md">Topology</a></p>
+<h3>How to get there</h3>
+<ul>
+<li>Screen id: <code>#overview</code> (Command Center home)</li>
+<li>Nav: <strong>Control Center → Overview</strong> (sidebar ⌂) or land here immediately after login</li>
+</ul>
+<h3>Operate from the console (UX)</h3>
+<ol>
+<li>Sign in at <code>/__chimera/</code> if the login gate is showing.</li>
+<li>Read the six metric tiles: <strong>Requests</strong>, <strong>Error Rate</strong>, <strong>Active Sessions</strong>, <strong>Data Transfer</strong>, <strong>Exports</strong>, <strong>Avg Response</strong>.</li>
+<li>Note trend arrows (↑/↓) on the second poll — dashboard polling under <code>/__chimera</code> is excluded from these counters, so flat zeros mean no client traffic yet.</li>
+<li>Optionally change <strong>Last 15 minutes</strong> / <strong>Last hour</strong> in the page head (visual filter; telemetry still polls every ~2s).</li>
+<li>Click <strong>↻ Refresh</strong> to force an immediate telemetry pull if you just started Transiva or <code>selftest</code>.</li>
+<li>Use the top bar <strong>Scenario</strong> dropdown shortcut to scroll to Scenario Launcher when you want presets without hunting the page.</li>
+</ol>
+<p><strong>Empty / fail:</strong> All KPIs stay at zero after export tests → confirm clients hit <code>/sdk</code>, not <code>/__chimera/</code>. <strong>Error Rate</strong> climbs with red statuses in <a href="live-requests.md">Live requests</a> — open Fault Studio or run <strong>Clean Environment</strong>. Health ring in the sidebar reads <strong>Unavailable</strong> → check <code>GET /__chimera/health</code> on the host.</p>
+<p><strong>Success:</strong> Requests and sessions increment during <code>selftest</code> or Transiva export; exports tick up on NFC lease starts; error rate stays near 0% on clean runs.</p>
+<h3>Related pages</h3>
+<ul>
+<li><a href="live-requests.md">Live requests</a></li>
+<li><a href="activity.md">Top Activity</a></li>
+<li><a href="topology.md">Topology</a></li>
+<li><a href="scenarios.md">Scenario Launcher</a></li>
+<li><a href="../../getting-started.md">Getting Started</a></li>
+<li><a href="../../PAGE_INDEX.md">Page index</a></li>
+</ul>
 <hr>
 <h2>Scenario Launcher</h2>
 <h3>Purpose</h3>
-<p>One-click deterministic presets for clean, slow, flaky, and resume export paths.</p>
+<p>One-click deterministic presets for clean, slow, flaky, and resume-export fault paths — without hand-tuning Fault Studio each run.</p>
 <h3>When to use it</h3>
-<p>Repeatable Transiva / client tests without hand-tuning Fault Studio each time.</p>
-<h3>How to get there</h3>
-<p>Overview — scenario cards.</p>
-<h3>What you can do</h3>
 <ul>
-<li><strong>Clean Environment</strong> — baseline happy path</li>
-<li><strong>Slow Fabric</strong> — latency pressure</li>
-<li><strong>Flaky API</strong> — intermittent failures</li>
-<li><strong>Resume Export</strong> — NFC drop for Range/206 retry</li>
+<li>Repeatable Transiva or client hardening tests</li>
+<li>Reset to baseline (<strong>Clean Environment</strong>) between scenarios</li>
+<li>Simulate NFC drop mid-transfer for Range/206 resume behavior</li>
 </ul>
-<h3>Related</h3>
-<p><a href="fault-studio.md">Fault Studio</a> · <a href="../../workflows.md">Workflows</a></p>
+<h3>How to get there</h3>
+<ul>
+<li>Screen id: <code>#scenarios</code></li>
+<li>Nav: <strong>Control Center → Scenarios</strong> (sidebar ◈) or top bar <strong>Scenario</strong> button (scrolls here)</li>
+</ul>
+<h3>Operate from the console (UX)</h3>
+<ol>
+<li>Sign in — scenarios POST to <code>/__chimera/scenario/*</code> and require the admin bearer token.</li>
+<li>Scroll to <strong>Scenario Launcher</strong> (right column on Overview, below VM inventory on wide layouts).</li>
+<li>Click a card:<ul>
+<li><strong>Clean Environment</strong> — reset faults and counters (happy path baseline).</li>
+<li><strong>Slow Fabric</strong> — high latency and low bandwidth pressure.</li>
+<li><strong>Flaky API</strong> — random failures and timeouts on API calls.</li>
+<li><strong>Resume Export</strong> — drop NFC connection mid-transfer (~2 MiB) for Range retry / HTTP 206.</li>
+</ul>
+</li>
+<li>Active card highlights with an inset ring; toast shows <strong>Scenario applied</strong> with the preset name.</li>
+<li>Open <a href="fault-studio.md">Fault Studio</a> to inspect the underlying latency/failure fields the preset set.</li>
+<li>Click <strong>View Fault Studio →</strong> at the bottom of the card for the same drawer.</li>
+<li>Re-run Transiva export or <code>./bin/chimera selftest</code>, then watch <a href="live-requests.md">Live requests</a> and KPI error rate.</li>
+</ol>
+<p>CLI equivalent (same token as API): <code>./scripts/scenario.sh clean|slow|flaky|resume</code></p>
+<p><strong>Empty / fail:</strong> Click does nothing / login page returns → session expired; sign in again. <strong>Scenario failed</strong> toast → check engine logs; verify <code>Authorization</code> path with <code>CHIMERA_ADMIN_TOKEN</code> if using curl. Resume test never shows 206 → confirm client sends Range headers (see <a href="../../workflows.md">Workflows</a>).</p>
+<p><strong>Success:</strong> Toast confirms preset; Fault Studio summary chips update; traffic reflects scenario (latency, errors, or dropped NFC) until <strong>Clean Environment</strong> or <strong>Reset</strong>.</p>
+<h3>Related pages</h3>
+<ul>
+<li><a href="fault-studio.md">Fault Studio</a></li>
+<li><a href="live-requests.md">Live requests</a></li>
+<li><a href="overview.md">Overview KPIs</a></li>
+<li><a href="../../workflows.md">Workflows</a></li>
+<li><a href="../../PAGE_INDEX.md">Page index</a></li>
+</ul>
 <hr>
 <h2>Settings</h2>
 <h3>Purpose</h3>
-<p>Show listen address and change Command Center admin username/password live (no restart).</p>
+<p>Show the configured listen address (read-only) and change Command Center admin username/password live — no Chimera restart required.</p>
 <h3>When to use it</h3>
-<p>After first login in any shared lab; before exposing Chimera beyond localhost.</p>
-<h3>How to get there</h3>
-<p>Dashboard Settings panel (operator chrome).</p>
-<h3>What you can do</h3>
 <ul>
-<li>Review listen / endpoint info</li>
-<li>Rotate admin credentials used by the UI login gate</li>
+<li>After first login in a shared lab — rotate off default <strong>admin</strong> / <strong>admin</strong></li>
+<li>Confirm which address/port Chimera binds (<code>CHIMERA_LISTEN</code>) before sharing URLs</li>
+<li>Same panel as <strong>Users &amp; Auth</strong> — Chimera has one shared admin login, not a multi-user directory</li>
 </ul>
-<h3>Related</h3>
-<p><a href="login.md">Login</a> · <a href="../../admin-basics.md">Admin basics</a></p>
+<h3>How to get there</h3>
+<ul>
+<li>Drawer id: <code>#settingsDrawer</code></li>
+<li>Nav: <strong>Administration → Settings</strong> or <strong>Users &amp; Auth</strong> (sidebar), or top bar <strong>gear</strong> icon</li>
+</ul>
+<h3>Operate from the console (UX)</h3>
+<ol>
+<li>Sign in (required to save credential changes).</li>
+<li>Open Settings from sidebar <strong>Settings</strong>, <strong>Users &amp; Auth</strong>, or the top bar gear — all three open this drawer.</li>
+<li>Read <strong>Listen address</strong> at top — reflects live bind (for example <code>0.0.0.0:8989</code>); changing it needs <code>CHIMERA_LISTEN</code> in env/config and a process restart.</li>
+<li>Enter <strong>New admin username</strong> and <strong>New admin password</strong> (both required).</li>
+<li>Click <strong>Save login</strong> — toast <strong>Login updated</strong>; fields clear.</li>
+<li>Log out via the top-right user chip and sign in with the new credentials on next session.</li>
+<li>Optional: set <code>CHIMERA_ADMIN_USERNAME</code> / <code>CHIMERA_ADMIN_PASSWORD</code> at startup for immutable deploys — Settings overrides persist in memory until restart.</li>
+</ol>
+<p><strong>Empty / fail:</strong> <strong>Missing fields</strong> toast → supply both username and password. <strong>Save failed</strong> while logged out → login gate appears; authenticate first. Listen shows <strong>—</strong> → bootstrap could not read bind metadata; check config file.</p>
+<p><strong>Success:</strong> New credentials work on next login; old password rejected; listen address matches what you use in <code>http(s)://&lt;host&gt;:8989/__chimera/</code>.</p>
+<h3>Related pages</h3>
+<ul>
+<li><a href="login.md">Login</a></li>
+<li><a href="fault-studio.md">Fault Studio</a> (separate drawer — bolt icon, not gear)</li>
+<li><a href="../../admin-basics.md">Admin basics</a></li>
+<li><a href="../../getting-started.md">Getting Started</a></li>
+<li><a href="../../PAGE_INDEX.md">Page index</a></li>
+</ul>
 <hr>
 <h2>Topology</h2>
 <h3>Purpose</h3>
 <p>Visual datacenter → cluster → host → datastore map of the simulated estate.</p>
 <h3>When to use it</h3>
-<p>Orient operators to inventory shape before export tests.</p>
-<h3>How to get there</h3>
-<p>Overview board — topology panel. Use <strong>View Full Topology</strong> for full-viewport zoom (<code>Fit</code> / <code>+</code>).</p>
-<h3>What you can do</h3>
 <ul>
-<li>Inspect labels hydrated from config counts and fixture size</li>
-<li>Dismiss overlay via button, outside click, or Escape</li>
+<li>Orient operators to inventory shape before export or Transiva wiring</li>
+<li>Confirm config counts (<code>datacenters</code>, <code>clusters</code>, <code>hosts_per_cluster</code>, <code>datastores</code>) match expectations</li>
+<li>Walk new teammates through the fake vSphere layout without opening the SDK</li>
 </ul>
-<h3>Related</h3>
-<p><a href="vm-inventory.md">VM inventory</a> · <a href="../../admin-basics.md">Admin basics</a></p>
+<h3>How to get there</h3>
+<ul>
+<li>Screen id: <code>#topology</code></li>
+<li>Nav: <strong>Control Center → Topologies</strong> (sidebar ⌘) or scroll to <strong>Infrastructure Topology</strong> on Overview</li>
+</ul>
+<h3>Operate from the console (UX)</h3>
+<ol>
+<li>From Overview, locate the <strong>Infrastructure Topology</strong> card — subtitle shows live counts (for example <code>1 datacenter · 2 clusters · 3 hosts</code>).</li>
+<li>Read node labels: <strong>DC0</strong> (datacenter), <strong>Cluster0/1</strong>, <strong>Host0–2</strong> with lab IPs, <strong>Datastore0–2</strong> with fixture size from config.</li>
+<li>Click <strong>View Full Topology</strong> to expand the same diagram full-viewport; use toolbar <strong>Fit</strong> to reset zoom or <strong>＋</strong> to step zoom in.</li>
+<li>Dismiss fullscreen via <strong>Exit Full Screen</strong>, click outside the diagram, or press <strong>Escape</strong>.</li>
+<li>Cross-check host/datastore count with <a href="vm-inventory.md">VM inventory</a> sidebar badge and table footer.</li>
+</ol>
+<p><strong>Empty / fail:</strong> Subtitle stuck at generic text → bootstrap API may have failed; reload after login or check engine logs. Nodes show but datastore labels say <code>fixture</code> with wrong size → verify <code>fixture_size_mb</code> in config and restart if you changed estate shape.</p>
+<p><strong>Success:</strong> Topology subtitle matches your JSON config; fullscreen zoom works; footer <strong>vSphere Persona</strong> strip shows the public SDK endpoint clients should use.</p>
+<h3>Related pages</h3>
+<ul>
+<li><a href="vm-inventory.md">VM inventory</a></li>
+<li><a href="overview.md">Overview KPIs</a></li>
+<li><a href="../../admin-basics.md">Admin basics</a></li>
+<li><a href="../../getting-started.md">Getting Started</a></li>
+<li><a href="../../PAGE_INDEX.md">Page index</a></li>
+</ul>
 <hr>
 <h2>VM inventory</h2>
 <h3>Purpose</h3>
-<p>Searchable, paginated table of simulator VMs with power state, CPU/memory/disk, datastore, and Fixture badge.</p>
+<p>Searchable, paginated table of simulator VMs with power state, CPU/memory/disk, datastore, and Fixture badge (real VMDK vs synthetic).</p>
 <h3>When to use it</h3>
-<p>Pick an export target; confirm fixture matching (real VMDK vs synthetic).</p>
-<h3>How to get there</h3>
-<p>Overview — VM inventory table.</p>
-<h3>What you can do</h3>
 <ul>
-<li>Filter by name and power state</li>
-<li>Copy/select a VM for export workflows</li>
-<li>Hover Fixture badge for filename (<code>Matched</code>, <code>Round-robin</code>, <code>Shared</code>, <code>Manual</code>, <code>Synthetic</code>)</li>
+<li>Pick an export target for Transiva or manual <code>ExportVm</code> tests</li>
+<li>Confirm fixture matching (<code>Matched</code>, <code>Round-robin</code>, <code>Shared</code>, <code>Manual</code>, <code>Synthetic</code>)</li>
+<li>Filter powered-on VMs before copying a name to the clipboard</li>
 </ul>
-<h3>Related</h3>
-<p><a href="vmdk-library.md">VMDK Library</a> · <a href="../../workflows.md">Workflows</a></p>
+<h3>How to get there</h3>
+<ul>
+<li>Screen id: <code>#inventory</code></li>
+<li>Nav: <strong>Control Center → Inventory</strong> (sidebar ▤) — badge shows total VM count</li>
+<li>Global search (<strong>⌘K</strong> / Ctrl+K) filters this table and scrolls to it</li>
+</ul>
+<h3>Operate from the console (UX)</h3>
+<ol>
+<li>Sign in and scroll to <strong>Virtual Machines (<em>n</em>)</strong> (or use sidebar <strong>Inventory</strong>).</li>
+<li>Use <strong>Search VM by name…</strong> or the top-bar global search — both filter the same table.</li>
+<li>Set <strong>All Power States</strong> to <strong>Powered On</strong> or <strong>Powered Off</strong> when narrowing export candidates.</li>
+<li>Scan columns: vCPU, memory, disk, datastore, <strong>Fixture</strong> badge (hover for underlying filename).</li>
+<li>Click the <strong>⇩</strong> icon on a row to copy that VM name to the clipboard (toast confirms selection).</li>
+<li>Click <strong>⬡ Export VM</strong> in the card header to copy the first row matching current filters — useful after power-state filter.</li>
+<li>Paginate with numbered page buttons (5 VMs per page); sidebar count should match config <code>vms_per_pool</code> totals.</li>
+</ol>
+<p><strong>Empty / fail:</strong> <strong>No matching virtual machines.</strong> with empty search → check simulator counts in config and restart Chimera after estate changes. All <strong>Synthetic</strong> when you expected real disks → stage VMDKs in <a href="vmdk-library.md">VMDK Library</a> or set <code>fixture_vmdk_dir</code>. Copy actions toast <strong>No VM selected</strong> → relax filters.</p>
+<p><strong>Success:</strong> Expected VM names (for example <code>DC0_C0_RP0_VM0</code>) listed; fixture badges reflect matching rules; copied name pastes into Transiva config or shell scripts.</p>
+<h3>Related pages</h3>
+<ul>
+<li><a href="vmdk-library.md">VMDK Library</a></li>
+<li><a href="topology.md">Topology</a></li>
+<li><a href="../../workflows.md">Workflows</a></li>
+<li><a href="../../getting-started.md">Getting Started</a></li>
+<li><a href="../../PAGE_INDEX.md">Page index</a></li>
+</ul>
 <hr>
 <h2>VMDK Library</h2>
 <h3>Purpose</h3>
-<p>List and manage <code>.vmdk</code> fixtures under configured fixture directories; upload or browse; optionally pin to a VM.</p>
+<p>List and manage <code>.vmdk</code> fixtures under configured fixture directories; upload from the browser or pick staged host files; optionally pin to a VM.</p>
 <h3>When to use it</h3>
-<p>Testing Transiva <strong>conversion</strong> with real disks, not only NFC transfer of synthetic fixtures.</p>
-<h3>How to get there</h3>
-<p>Overview — VMDK Library card.</p>
-<h3>What you can do</h3>
 <ul>
-<li>Upload a <code>.vmdk</code> into <code>fixture_vmdk_dir</code></li>
-<li>Browse staged host files under fixture roots only</li>
-<li>Pin/clear Manual assignment (overrides name/round-robin matching)</li>
-<li>Auto re-scan every ~5 seconds</li>
+<li>Exercise Transiva <strong>conversion</strong> with real disks, not only synthetic NFC transfer</li>
+<li>Inspect which VM (if any) each on-disk fixture is assigned to</li>
+<li>Add fixtures without shell access to the host (upload or browse within allowed roots only)</li>
 </ul>
-<h3>Related</h3>
-<p><a href="vm-inventory.md">VM inventory</a> · product-repo <code>docs/TRANSIVA.md</code></p>
+<h3>How to get there</h3>
+<ul>
+<li>Screen id: <code>#vmdks</code></li>
+<li>Nav: <strong>Control Center → VMDK Library</strong> (sidebar ⛁) — badge shows file count</li>
+</ul>
+<h3>Operate from the console (UX)</h3>
+<ol>
+<li>Sign in and scroll to <strong>VMDK Library (<em>n</em>)</strong> — subtitle shows the active directory path or <strong>No fixture_vmdk_dir configured</strong>.</li>
+<li>Review the table: file name, size, assigned VM, assignment method (<code>Matched</code>, <code>Round-robin</code>, <code>Manual</code>, etc.).</li>
+<li>Click <strong>⇪ Upload VMDK</strong> (requires login):<ul>
+<li><strong>Upload a file:</strong> choose a local <code>.vmdk</code>, optionally pick <strong>Assign to VM</strong> (or leave <strong>Auto</strong> for name-match / round-robin).</li>
+<li>Click <strong>Upload</strong> — toast confirms; library rescans within ~5s even without restart.</li>
+</ul>
+</li>
+<li>Or <strong>pick a file already on the host:</strong> select fixture root from dropdown, navigate folders (↑ goes up one level), click a <code>.vmdk</code> row — you must pick a VM first when assigning from browse.</li>
+<li>After manual pin, confirm the VM row in <a href="vm-inventory.md">VM inventory</a> shows <strong>Manual</strong> fixture badge.</li>
+<li>Files with no VM assignment still appear here — they will not show in the VM-keyed inventory table until matched.</li>
+</ol>
+<p><strong>Empty / fail:</strong> <strong>No VMDK directory configured.</strong> → set <code>fixture_vmdk_dir</code> / <code>fixture_vmdk_dirs</code> in config and restart. <strong>Upload failed</strong> → check disk space and 8 GiB upload cap. Browse list empty → only configured fixture roots are visible (never arbitrary host paths). <strong>Assign failed</strong> → select target VM before clicking a file in browse mode.</p>
+<p><strong>Success:</strong> New files appear with size and method; assigned VM column populated; Transiva export of that VM uses the real disk.</p>
+<h3>Related pages</h3>
+<ul>
+<li><a href="vm-inventory.md">VM inventory</a></li>
+<li><a href="../../workflows.md">Workflows</a></li>
+<li>Product repo <code>docs/TRANSIVA.md</code> (matching rules)</li>
+<li><a href="../../admin-basics.md">Admin basics</a></li>
+<li><a href="../../PAGE_INDEX.md">Page index</a></li>
+</ul>
 <hr>
 <h2>Chimera — Complete page index</h2>
 <p>Every primary navigable dashboard route.</p>
-<p><em>Generated: 2026-08-29 · 0 routes</em></p>
+<p><em>Generated: 2026-08-29 · 10 routes</em></p>
 <p>Regenerate: <code>node scripts/customer-docs/generate-page-index.mjs</code></p>
+<h3>AUTH</h3>
+<table>
+<thead>
+<tr>
+<th>Page</th>
+<th>Route</th>
+<th>Purpose</th>
+<th>Guide</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Login</td>
+<td><code>/login</code></td>
+<td>Authenticate the browser session before Command Center chrome or live data loads.</td>
+<td><a href="pages/command-center/login.md">Open</a></td>
+</tr>
+</tbody></table>
+<h3>COMMAND CENTER</h3>
+<table>
+<thead>
+<tr>
+<th>Page</th>
+<th>Route</th>
+<th>Purpose</th>
+<th>Guide</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Overview KPIs</td>
+<td><code>/overview</code></td>
+<td>Six live KPIs — requests, error rate, sessions, bytes, exports, latency — refreshed every two seconds.</td>
+<td><a href="pages/command-center/overview.md">Open</a></td>
+</tr>
+<tr>
+<td>Topology</td>
+<td><code>/topology</code></td>
+<td>Datacenter → cluster → host → datastore map of the configured simulator estate.</td>
+<td><a href="pages/command-center/topology.md">Open</a></td>
+</tr>
+<tr>
+<td>Top Activity</td>
+<td><code>/activity</code></td>
+<td>Donut and legend grouping infrastructure traffic by operation class (SOAP, SDK, NFC).</td>
+<td><a href="pages/command-center/activity.md">Open</a></td>
+</tr>
+<tr>
+<td>Live requests</td>
+<td><code>/live-requests</code></td>
+<td>Newest infrastructure HTTP calls with method, path, status, and gateway duration.</td>
+<td><a href="pages/command-center/live-requests.md">Open</a></td>
+</tr>
+<tr>
+<td>VM inventory</td>
+<td><code>/vm-inventory</code></td>
+<td>Searchable, paginated simulator VM table with power state, sizing, datastore, and fixture badge.</td>
+<td><a href="pages/command-center/vm-inventory.md">Open</a></td>
+</tr>
+<tr>
+<td>VMDK Library</td>
+<td><code>/vmdk-library</code></td>
+<td>Fixture <code>.vmdk</code> inventory — upload from browser or pick staged host files; optional VM pin.</td>
+<td><a href="pages/command-center/vmdk-library.md">Open</a></td>
+</tr>
+<tr>
+<td>Scenario Launcher</td>
+<td><code>/scenarios</code></td>
+<td>One-click presets: clean, slow fabric, flaky API, resume export.</td>
+<td><a href="pages/command-center/scenarios.md">Open</a></td>
+</tr>
+<tr>
+<td>Fault Studio</td>
+<td><code>/fault-studio</code></td>
+<td>Administrative drawer for latency, status codes, next-N failures, NFC drops, bandwidth cap.</td>
+<td><a href="pages/command-center/fault-studio.md">Open</a></td>
+</tr>
+<tr>
+<td>Settings</td>
+<td><code>/settings</code></td>
+<td>Read-only listen address plus live admin username/password rotation (no restart).</td>
+<td><a href="pages/command-center/settings.md">Open</a></td>
+</tr>
+</tbody></table>
 <h3>Related</h3>
 <ul>
 <li><a href="README.md">Customer docs home</a></li>
