@@ -8,3 +8,5 @@ coverage.txt
 .claude/
 transiva-chimera.yaml
 .deploy-last
+
+.docs-tools/

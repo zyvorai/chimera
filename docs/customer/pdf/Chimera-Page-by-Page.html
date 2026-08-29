@@ -1,0 +1,229 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/><title>Page-by-Page Product Manual — Chimera</title>
+<style>
+@page{size:A4;margin:15mm 16mm}*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{font-family:'Segoe UI',system-ui,sans-serif;color:#1f2937;line-height:1.58;font-size:10.5pt}
+.cover{height:262mm;margin:-15mm -16mm 0;background:linear-gradient(135deg,#1e1b4b,#312e81,#0d1b2a);color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;page-break-after:always;position:relative}
+.cover .kicker{letter-spacing:5px;text-transform:uppercase;opacity:.72;margin-bottom:1.4em}
+.cover h1{font-size:3.2em;font-weight:800;letter-spacing:-2px}
+.cover h1 span{color:#a78bfa}
+.cover .sub{font-size:1.3em;font-weight:300;opacity:.93;margin:1em 0;max-width:24em}
+.cover .badge{display:inline-block;background:rgba(96,165,250,.2);border:1px solid #a78bfa;padding:8px 22px;border-radius:20px;margin-top:2em}
+.cover .foot{position:absolute;bottom:34px;font-size:.82em;opacity:.6}
+h2{page-break-before:always;margin:0 0 .35em;font-size:1.55em;font-weight:750;color:#12203a;border-bottom:2px solid #e5edfb;padding-bottom:.28em}
+h2:first-of-type{page-break-before:avoid}
+h3{margin:1.1em 0 .4em;font-size:1.12em;font-weight:700}
+p,li{margin:.4em 0}ul,ol{margin:.5em 0 .9em 1.4em}
+a{color:#2563eb;text-decoration:none}
+code{background:#eef2f7;padding:1px 6px;border-radius:4px;font-size:.86em;font-family:ui-monospace,Menlo,monospace}
+pre{background:#0f172a;color:#e2e8f0;padding:12px 15px;border-radius:9px;overflow-x:auto;margin:.8em 0}
+table{width:100%;border-collapse:collapse;margin:.8em 0 1.1em;font-size:9.5pt}
+th,td{border:1px solid #e5e7eb;padding:6px 8px;text-align:left;vertical-align:top}th{background:#f1f5f9}
+hr{border:none;border-top:1px solid #e5e7eb;margin:1.2em 0}
+</style></head><body>
+<section class="cover"><div class="kicker">ZyvorAI Labs · Customer Documentation</div>
+<h1>Chi<span>mera</span></h1>
+<div class="sub">Page-by-Page Product Manual</div>
+<div class="badge">2026-08-29</div>
+<div class="foot">zyvor.dev · Confidential — for licensed customers</div></section>
+<main><h2>Page-by-page guides</h2>
+<p>Each guide follows: Purpose → When to use it → How to get there → Operate from the console (UX) → Related pages.</p>
+<p>Every route is also listed in the <a href="../PAGE_INDEX.md">complete page index</a>.</p>
+<h3>Command Center</h3>
+<table>
+<thead>
+<tr>
+<th>Page</th>
+<th>What it covers</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="command-center/fault-studio.md">Fault Studio</a></td>
+<td>Operator drawer for latency, status codes, next-N API/NFC failures, stream drops, drop offset, and bandwidth caps.</td>
+</tr>
+<tr>
+<td><a href="command-center/live-requests.md">Live requests</a></td>
+<td>Stream recent infrastructure HTTP calls: method, path, status, duration.</td>
+</tr>
+<tr>
+<td><a href="command-center/login.md">Login</a></td>
+<td>Authenticate the browser session before any Command Center chrome or data is shown.</td>
+</tr>
+<tr>
+<td><a href="command-center/overview.md">Overview KPIs</a></td>
+<td>Show live gateway-derived health: requests, error rate, sessions, bytes, exports, latency.</td>
+</tr>
+<tr>
+<td><a href="command-center/scenarios.md">Scenario Launcher</a></td>
+<td>One-click deterministic presets for clean, slow, flaky, and resume export paths.</td>
+</tr>
+<tr>
+<td><a href="command-center/settings.md">Settings</a></td>
+<td>Show listen address and change Command Center admin username/password live (no restart).</td>
+</tr>
+<tr>
+<td><a href="command-center/topology.md">Topology</a></td>
+<td>Visual datacenter → cluster → host → datastore map of the simulated estate.</td>
+</tr>
+<tr>
+<td><a href="command-center/vm-inventory.md">VM inventory</a></td>
+<td>Searchable, paginated table of simulator VMs with power state, CPU/memory/disk, datastore, and Fixture badge.</td>
+</tr>
+<tr>
+<td><a href="command-center/vmdk-library.md">VMDK Library</a></td>
+<td>List and manage <code>.vmdk</code> fixtures under configured fixture directories; upload or browse; optionally pin to a VM.</td>
+</tr>
+</tbody></table>
+<hr>
+<p>9 guides. Regenerate: <code>node scripts/customer-docs/generate-guide-index.mjs</code>.</p>
+<hr>
+<h2>Fault Studio</h2>
+<h3>Purpose</h3>
+<p>Operator drawer for latency, status codes, next-N API/NFC failures, stream drops, drop offset, and bandwidth caps.</p>
+<h3>When to use it</h3>
+<p>Hardening clients (Transiva) against partial transfers and API errors.</p>
+<h3>How to get there</h3>
+<p>Top bar gear, sidebar, or scenario panel → Fault Studio drawer.</p>
+<h3>What you can do</h3>
+<ul>
+<li>Arm next-N failures or one-shot NFC stream drops</li>
+<li>Cap bandwidth; clear faults before clean runs</li>
+</ul>
+<h3>Related</h3>
+<p><a href="scenarios.md">Scenarios</a> · <a href="live-requests.md">Live requests</a></p>
+<hr>
+<h2>Live requests</h2>
+<h3>Purpose</h3>
+<p>Stream recent infrastructure HTTP calls: method, path, status, duration.</p>
+<h3>When to use it</h3>
+<p>Debug govmomi / Transiva traffic and spot red status codes.</p>
+<h3>How to get there</h3>
+<p>Overview — Live requests panel. Top bar bell scrolls here.</p>
+<h3>What you can do</h3>
+<ul>
+<li>Toggle <strong>View All</strong> / <strong>View Less</strong> (10 vs 30 buffered rows)</li>
+<li>Correlate failures with Fault Studio settings</li>
+</ul>
+<h3>Related</h3>
+<p><a href="fault-studio.md">Fault Studio</a> · <a href="overview.md">Overview KPIs</a></p>
+<hr>
+<h2>Login</h2>
+<h3>Purpose</h3>
+<p>Authenticate the browser session before any Command Center chrome or data is shown.</p>
+<h3>When to use it</h3>
+<p>Every new browser session. Mutating controls require login.</p>
+<h3>How to get there</h3>
+<p>Open <code>http(s)://&lt;host&gt;:8989/__chimera/</code>. Unauthenticated users see only the login page.</p>
+<h3>What you can do</h3>
+<ul>
+<li>Sign in with username/password (default <code>admin</code> / <code>admin</code>)</li>
+<li>After login, the full overview loads</li>
+</ul>
+<h3>Related</h3>
+<p><a href="settings.md">Settings</a> · <a href="../../admin-basics.md">Admin basics</a></p>
+<hr>
+<h2>Overview KPIs</h2>
+<h3>Purpose</h3>
+<p>Show live gateway-derived health: requests, error rate, sessions, bytes, exports, latency.</p>
+<h3>When to use it</h3>
+<p>First screen after login; confirm the engine is receiving infrastructure traffic.</p>
+<h3>How to get there</h3>
+<p>Command Center home — top metrics row.</p>
+<h3>What you can do</h3>
+<ul>
+<li>Refresh the window</li>
+<li>Note that <code>/__chimera</code> polling itself is excluded from counters</li>
+</ul>
+<h3>Related</h3>
+<p><a href="live-requests.md">Live requests</a> · <a href="topology.md">Topology</a></p>
+<hr>
+<h2>Scenario Launcher</h2>
+<h3>Purpose</h3>
+<p>One-click deterministic presets for clean, slow, flaky, and resume export paths.</p>
+<h3>When to use it</h3>
+<p>Repeatable Transiva / client tests without hand-tuning Fault Studio each time.</p>
+<h3>How to get there</h3>
+<p>Overview — scenario cards.</p>
+<h3>What you can do</h3>
+<ul>
+<li><strong>Clean Environment</strong> — baseline happy path</li>
+<li><strong>Slow Fabric</strong> — latency pressure</li>
+<li><strong>Flaky API</strong> — intermittent failures</li>
+<li><strong>Resume Export</strong> — NFC drop for Range/206 retry</li>
+</ul>
+<h3>Related</h3>
+<p><a href="fault-studio.md">Fault Studio</a> · <a href="../../workflows.md">Workflows</a></p>
+<hr>
+<h2>Settings</h2>
+<h3>Purpose</h3>
+<p>Show listen address and change Command Center admin username/password live (no restart).</p>
+<h3>When to use it</h3>
+<p>After first login in any shared lab; before exposing Chimera beyond localhost.</p>
+<h3>How to get there</h3>
+<p>Dashboard Settings panel (operator chrome).</p>
+<h3>What you can do</h3>
+<ul>
+<li>Review listen / endpoint info</li>
+<li>Rotate admin credentials used by the UI login gate</li>
+</ul>
+<h3>Related</h3>
+<p><a href="login.md">Login</a> · <a href="../../admin-basics.md">Admin basics</a></p>
+<hr>
+<h2>Topology</h2>
+<h3>Purpose</h3>
+<p>Visual datacenter → cluster → host → datastore map of the simulated estate.</p>
+<h3>When to use it</h3>
+<p>Orient operators to inventory shape before export tests.</p>
+<h3>How to get there</h3>
+<p>Overview board — topology panel. Use <strong>View Full Topology</strong> for full-viewport zoom (<code>Fit</code> / <code>+</code>).</p>
+<h3>What you can do</h3>
+<ul>
+<li>Inspect labels hydrated from config counts and fixture size</li>
+<li>Dismiss overlay via button, outside click, or Escape</li>
+</ul>
+<h3>Related</h3>
+<p><a href="vm-inventory.md">VM inventory</a> · <a href="../../admin-basics.md">Admin basics</a></p>
+<hr>
+<h2>VM inventory</h2>
+<h3>Purpose</h3>
+<p>Searchable, paginated table of simulator VMs with power state, CPU/memory/disk, datastore, and Fixture badge.</p>
+<h3>When to use it</h3>
+<p>Pick an export target; confirm fixture matching (real VMDK vs synthetic).</p>
+<h3>How to get there</h3>
+<p>Overview — VM inventory table.</p>
+<h3>What you can do</h3>
+<ul>
+<li>Filter by name and power state</li>
+<li>Copy/select a VM for export workflows</li>
+<li>Hover Fixture badge for filename (<code>Matched</code>, <code>Round-robin</code>, <code>Shared</code>, <code>Manual</code>, <code>Synthetic</code>)</li>
+</ul>
+<h3>Related</h3>
+<p><a href="vmdk-library.md">VMDK Library</a> · <a href="../../workflows.md">Workflows</a></p>
+<hr>
+<h2>VMDK Library</h2>
+<h3>Purpose</h3>
+<p>List and manage <code>.vmdk</code> fixtures under configured fixture directories; upload or browse; optionally pin to a VM.</p>
+<h3>When to use it</h3>
+<p>Testing Transiva <strong>conversion</strong> with real disks, not only NFC transfer of synthetic fixtures.</p>
+<h3>How to get there</h3>
+<p>Overview — VMDK Library card.</p>
+<h3>What you can do</h3>
+<ul>
+<li>Upload a <code>.vmdk</code> into <code>fixture_vmdk_dir</code></li>
+<li>Browse staged host files under fixture roots only</li>
+<li>Pin/clear Manual assignment (overrides name/round-robin matching)</li>
+<li>Auto re-scan every ~5 seconds</li>
+</ul>
+<h3>Related</h3>
+<p><a href="vm-inventory.md">VM inventory</a> · product-repo <code>docs/TRANSIVA.md</code></p>
+<hr>
+<h2>Chimera — Complete page index</h2>
+<p>Every primary navigable dashboard route.</p>
+<p><em>Generated: 2026-08-29 · 0 routes</em></p>
+<p>Regenerate: <code>node scripts/customer-docs/generate-page-index.mjs</code></p>
+<h3>Related</h3>
+<ul>
+<li><a href="README.md">Customer docs home</a></li>
+<li><a href="pages/README.md">Page-by-page guides</a></li>
+</ul>
+</main></body></html>

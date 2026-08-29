@@ -1,0 +1,163 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/><title>Getting Started — Chimera</title>
+<style>
+@page{size:A4;margin:15mm 16mm}*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{font-family:'Segoe UI',system-ui,sans-serif;color:#1f2937;line-height:1.58;font-size:10.5pt}
+.cover{height:262mm;margin:-15mm -16mm 0;background:linear-gradient(135deg,#1e1b4b,#312e81,#0d1b2a);color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;page-break-after:always;position:relative}
+.cover .kicker{letter-spacing:5px;text-transform:uppercase;opacity:.72;margin-bottom:1.4em}
+.cover h1{font-size:3.2em;font-weight:800;letter-spacing:-2px}
+.cover h1 span{color:#a78bfa}
+.cover .sub{font-size:1.3em;font-weight:300;opacity:.93;margin:1em 0;max-width:24em}
+.cover .badge{display:inline-block;background:rgba(96,165,250,.2);border:1px solid #a78bfa;padding:8px 22px;border-radius:20px;margin-top:2em}
+.cover .foot{position:absolute;bottom:34px;font-size:.82em;opacity:.6}
+h2{page-break-before:always;margin:0 0 .35em;font-size:1.55em;font-weight:750;color:#12203a;border-bottom:2px solid #e5edfb;padding-bottom:.28em}
+h2:first-of-type{page-break-before:avoid}
+h3{margin:1.1em 0 .4em;font-size:1.12em;font-weight:700}
+p,li{margin:.4em 0}ul,ol{margin:.5em 0 .9em 1.4em}
+a{color:#2563eb;text-decoration:none}
+code{background:#eef2f7;padding:1px 6px;border-radius:4px;font-size:.86em;font-family:ui-monospace,Menlo,monospace}
+pre{background:#0f172a;color:#e2e8f0;padding:12px 15px;border-radius:9px;overflow-x:auto;margin:.8em 0}
+table{width:100%;border-collapse:collapse;margin:.8em 0 1.1em;font-size:9.5pt}
+th,td{border:1px solid #e5e7eb;padding:6px 8px;text-align:left;vertical-align:top}th{background:#f1f5f9}
+hr{border:none;border-top:1px solid #e5e7eb;margin:1.2em 0}
+</style></head><body>
+<section class="cover"><div class="kicker">ZyvorAI Labs · Customer Documentation</div>
+<h1>Chi<span>mera</span></h1>
+<div class="sub">Getting Started</div>
+<div class="badge">2026-08-29</div>
+<div class="foot">zyvor.dev · Confidential — for licensed customers</div></section>
+<main><h2>What you need</h2>
+<ul>
+<li>Go 1.25+ to build from source, <strong>or</strong> a <code>.deb</code>/<code>.rpm</code> from <a href="https://github.com/zyvorai/chimera/releases/latest">GitHub Releases</a></li>
+<li>Browser for Command Center</li>
+<li>Optional: Transiva checkout for end-to-end export smoke</li>
+</ul>
+<h2>1. Start the engine</h2>
+<pre><code class="language-bash">git clone https://github.com/zyvorai/chimera.git
+cd chimera
+go mod tidy
+go build -o bin/chimera ./cmd/chimera
+./bin/chimera serve -config config.example.json
+</code></pre>
+<p>Or remote install:</p>
+<pre><code class="language-bash">./scripts/deploy-remote.sh &lt;host&gt; [user]
+</code></pre>
+<h2>2. Open Command Center</h2>
+<pre><code class="language-text">http://localhost:8989/__chimera/
+</code></pre>
+<p>Log in with <strong>admin</strong> / <strong>admin</strong> (change later in Settings). Without a session the UI shows only the login screen.</p>
+<h2>3. Confirm the vSphere persona</h2>
+<pre><code class="language-bash">./bin/chimera selftest \
+  -url http://localhost:8989/sdk \
+  -user administrator@vsphere.local \
+  -pass vmware
+</code></pre>
+<p>A passing self-test proves auth, inventory, OVF descriptor, <code>ExportVm</code>, and NFC lease download.</p>
+<h2>4. First useful checks in the UI</h2>
+<ol>
+<li>Overview KPIs populate (requests, sessions, exports).</li>
+<li>Topology shows datacenter → cluster → host → datastore.</li>
+<li>VM inventory lists simulator VMs (for example <code>DC0_C0_RP0_VM0</code>).</li>
+<li>Scenario Launcher: try <strong>Clean Environment</strong>.</li>
+</ol>
+<h2>Next</h2>
+<ul>
+<li><a href="using-the-dashboard.md">Using the Dashboard</a></li>
+<li><a href="workflows.md">Wire Transiva</a></li>
+<li><a href="admin-basics.md">Admin basics</a></li>
+</ul>
+<hr>
+<p>Chimera&#39;s <strong>Command Center</strong> is a single-page infrastructure console embedded in the Go binary (<code>internal/gateway/ui.go</code>). There is no Node/React build step.</p>
+<h2>Shell layout</h2>
+<table>
+<thead>
+<tr>
+<th>Region</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Left rail</td>
+<td>Provider personas (vSphere active; others roadmap) + health ring</td>
+</tr>
+<tr>
+<td>Top bar</td>
+<td>Refresh, notifications (jumps to Live requests), Fault Studio gear</td>
+</tr>
+<tr>
+<td>Main column</td>
+<td>Overview KPIs, topology, activity donut, live requests, VM inventory, VMDK Library, scenarios</td>
+</tr>
+<tr>
+<td>Right drawer</td>
+<td>Fault Studio (latency, failures, NFC drops, bandwidth)</td>
+</tr>
+</tbody></table>
+<h2>How to move around</h2>
+<ol>
+<li>Sign in — mutating controls require a dashboard session.</li>
+<li>Use <strong>Refresh</strong> after scenario or fault changes.</li>
+<li>Open <strong>View Full Topology</strong> for the zoomable estate map.</li>
+<li>Filter VMs by name or power state; paginate as needed.</li>
+<li>Open Fault Studio from the gear icon when you need deterministic failures for Transiva retries.</li>
+</ol>
+<h2>Empty / fail tips</h2>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Check</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Login loop</td>
+<td>Defaults <code>admin</code>/<code>admin</code>; or values set via Settings / <code>CHIMERA_ADMIN_*</code></td>
+</tr>
+<tr>
+<td>Empty inventory</td>
+<td>Simulator counts in config; restart after config changes</td>
+</tr>
+<tr>
+<td>No KPI movement</td>
+<td>Dashboard polling is excluded from counters — drive traffic via <code>/sdk</code> or Transiva</td>
+</tr>
+<tr>
+<td>Self-test fails</td>
+<td>URL must be the SDK (<code>/sdk</code>), not <code>/__chimera/</code></td>
+</tr>
+</tbody></table>
+<p>Next: <a href="pages/README.md">Page-by-page guides</a> · <a href="workflows.md">Workflows</a></p>
+<hr>
+<h2>A. Prove the vSphere contract (self-test)</h2>
+<pre><code class="language-bash">./bin/chimera selftest \
+  -url http://localhost:8989/sdk \
+  -user administrator@vsphere.local \
+  -pass vmware
+</code></pre>
+<p>Expect: login → inventory → OVF descriptor → ExportVm → NFC download success.</p>
+<h2>B. Wire Transiva export</h2>
+<pre><code class="language-bash">./scripts/make-transiva-config.sh &gt; /tmp/transiva-chimera.yaml
+# Point Transiva / hyperexport at that config (see docs/TRANSIVA.md)
+</code></pre>
+<p>Confirm <code>vcenter_url</code> uses Chimera&#39;s host (not laptop <code>127.0.0.1</code> if Transiva runs elsewhere) and <code>insecure: true</code> for lab TLS.</p>
+<h2>C. Resume / Range download</h2>
+<pre><code class="language-bash">./scripts/scenario.sh resume
+</code></pre>
+<p>Drops the next NFC stream after ~2 MiB so Transiva retries with <code>Range: bytes=N-</code> and Chimera returns HTTP 206.</p>
+<p>Reset faults from Fault Studio or scenario reset afterwards.</p>
+<h2>D. Fault injection for client hardening</h2>
+<p>From Command Center → Fault Studio:</p>
+<ol>
+<li>Set latency or next-N API failures.</li>
+<li>Enable NFC stream drop / bandwidth cap.</li>
+<li>Re-run Transiva export or <code>selftest</code>.</li>
+<li>Clear faults before clean runs.</li>
+</ol>
+<h2>E. Real VMDK fixtures</h2>
+<ol>
+<li>Stage <code>.vmdk</code> files under <code>fixture_vmdk_dir</code> (or upload via <strong>VMDK Library</strong>).</li>
+<li>Optionally pin a file to a VM (Manual fixture badge).</li>
+<li>Export that VM through Transiva to exercise conversion, not only transfer.</li>
+</ol>
+<p>Matching rules: see product-repo <code>docs/TRANSIVA.md</code>.</p>
+</main></body></html>
