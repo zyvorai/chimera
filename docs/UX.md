@@ -10,7 +10,9 @@ There is no React/Node runtime, package manager, CDN, web-font dependency or sep
 
 ## Visual direction
 
-The UI is intentionally closer to a production infrastructure control plane than a developer mock: dense dark navigation, high-contrast telemetry, a topology workbench, compact data tables, scenario cards, and a slide-over Fault Studio. The generated design reference used for this iteration is included at `docs/chimera-ux-reference.png`.
+The UI follows an Apple TV Home–inspired layout: a sticky top nav, centered 980px content column, full-width hero on Home, and separate pages for Infrastructure, Inventory, Telemetry, and Lab. Typography uses the system stack (`-apple-system` / SF Pro), light surfaces, generous section padding, and tile cards that link between pages.
+
+Design cues come from Apple.com product pages: large hero headlines, alternating white/gray sections, pill CTAs, and one focused surface per page instead of a cramped single dashboard.
 
 ## Main surfaces
 
