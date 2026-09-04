@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"sort"
 	"sync"
 	"time"
 )
@@ -67,6 +68,7 @@ func (s *Store) List() []VM {
 	for _, vm := range s.VMs {
 		out = append(out, *vm)
 	}
+	sort.Slice(out, func(i, j int) bool { return out[i].ID < out[j].ID })
 	return out
 }
 
@@ -92,6 +94,15 @@ func (s *Store) SetPower(id, state string) (Task, bool) {
 	task := Task{ID: "task-" + hex.EncodeToString(seed[:6]), State: "SUCCEEDED", Operation: "set_power", VMID: id, CreatedAt: time.Now().UTC()}
 	s.Tasks[task.ID] = &task
 	return task, true
+}
+
+func (s *Store) NewTask(operation, targetID string) Task {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	seed := sha256.Sum256([]byte(operation + targetID + time.Now().UTC().Format(time.RFC3339Nano)))
+	task := Task{ID: "task-" + hex.EncodeToString(seed[:6]), State: "SUCCEEDED", Operation: operation, VMID: targetID, CreatedAt: time.Now().UTC()}
+	s.Tasks[task.ID] = &task
+	return task
 }
 
 func (s *Store) Task(id string) (Task, bool) {

@@ -6,13 +6,13 @@
 
 **Chimera** is a programmable infrastructure simulation engine for integration-testing migration, discovery, export and automation software without provisioning the real infrastructure platform.
 
-The architecture is provider-persona based: **vSphere is the deepest persona** (Command Center + govmomi), with **Nutanix Prism v3** and **Hyper-V WS-Man** available as protocol surfaces. Proxmox VE, OpenStack, and cloud/API personalities remain on the roadmap.
+The architecture is provider-persona based: **vSphere is the deepest persona** (Command Center + govmomi), with **Nutanix Prism v3**, **Hyper-V WS-Man**, **AWS EC2/EBS**, and **Azure ARM** available as protocol surfaces. Proxmox VE and OpenStack remain on the roadmap.
 
 > **One engine. Many infrastructure personalities.**
 
 Today, the vSphere persona is deliberately much deeper than a simple HTTP mock. A real govmomi client can authenticate with username/password, establish a session, traverse inventory, resolve VMs, create OVF descriptors, call `ExportVm`, wait on an `HttpNfcLease`, download a VMDK fixture, retry a broken transfer, and resume with HTTP Range/206 semantics.
 
-Chimera is a test and compatibility appliance. It is not VMware, Nutanix, Microsoft, Red Hat, Proxmox or cloud-vendor software, and it is not intended to host production workloads.
+Chimera is a test and compatibility appliance. It is not VMware, Nutanix, Microsoft, Amazon, Red Hat, Proxmox or cloud-vendor software, and it is not intended to host production workloads.
 
 ## What is included
 
@@ -70,6 +70,20 @@ CHIMERA_PERSONA=nutanix CHIMERA_USERNAME=admin CHIMERA_PASSWORD=secret go run ./
 CHIMERA_PERSONA=hyperv CHIMERA_USERNAME=Administrator CHIMERA_PASSWORD=secret go run ./cmd/chimera serve
 ```
 
+### AWS + Azure personas — available
+
+Protocol-only cloud surfaces (SigV4 / Bearer). Details: [`docs/AWS_AZURE_PERSONAS.md`](docs/AWS_AZURE_PERSONAS.md).
+
+| Persona | Auth | Coverage |
+|---|---|---|
+| AWS | SigV4 (`CHIMERA_USERNAME`=access key, `CHIMERA_PASSWORD`=secret) | EC2 Describe/Start/Stop, volumes, CreateSnapshot; EBS List/GetSnapshotBlock |
+| Azure | Bearer (`CHIMERA_USERNAME`=subscription ID, `CHIMERA_PASSWORD`=token) | ARM VM list/get/instanceView/start/powerOff; managed disk beginGetAccess + Range SAS |
+
+```bash
+CHIMERA_PERSONA=aws CHIMERA_USERNAME=AKIDCHIMERA CHIMERA_PASSWORD=chimera-secret go run ./cmd/chimera serve
+CHIMERA_PERSONA=azure CHIMERA_USERNAME=11111111-2222-3333-4444-555555555555 CHIMERA_PASSWORD=chimera-azure-token go run ./cmd/chimera serve
+```
+
 ### Persona roadmap
 
 | Persona | Status | Target compatibility |
@@ -77,9 +91,10 @@ CHIMERA_PERSONA=hyperv CHIMERA_USERNAME=Administrator CHIMERA_PASSWORD=secret go
 | VMware vSphere | **Implemented** | SOAP / VIM / OVF / HTTP NFC |
 | Nutanix Prism | **Available** | Prism v3 auth / inventory / power / disk export |
 | Microsoft Hyper-V | **Available** | WS-Man Identify / Enumerate / Pull / power |
+| Amazon Web Services | **Available** | EC2 Query + EBS snapshot blocks (SigV4) |
+| Microsoft Azure | **Available** | ARM Compute + managed disk SAS (Bearer) |
 | Proxmox VE | Planned | PVE REST API / tasks / storage |
 | OpenStack | Planned | Keystone / Nova / Glance / Cinder |
-| Cloud APIs | Planned | AWS/Azure-style discovery and export test surfaces |
 
 The provider contract and layout are documented in [`docs/PROVIDER_ARCHITECTURE.md`](docs/PROVIDER_ARCHITECTURE.md).
 
@@ -214,7 +229,7 @@ CHIMERA_FIXTURE_VMDK_DIR=./fixtures ./bin/chimera serve -listen 0.0.0.0:8989
 
 | JSON | Environment | Default |
 |---|---|---:|
-| `persona` | `CHIMERA_PERSONA` | `vsphere` (`nutanix`, `hyperv`) |
+| `persona` | `CHIMERA_PERSONA` | `vsphere` (`nutanix`, `hyperv`, `aws`, `azure`) |
 | `listen` | `CHIMERA_LISTEN` | `0.0.0.0:8989` |
 | `public_host` | `CHIMERA_PUBLIC_HOST` | listener address |
 | `tls` | `CHIMERA_TLS` | `false` |
@@ -327,14 +342,14 @@ Client / migration tool ---> +---------------------------+
                          v                                   v
               +---------------------+             +--------------------+
               | vSphere persona     |             | HTTP personas      |
-              | govmomi simulator   |             | Nutanix Prism v3   |
-              | SOAP/VIM inventory  |             | Hyper-V WS-Man     |
+              | govmomi simulator   |             | Nutanix · Hyper-V  |
+              | SOAP/VIM inventory  |             | AWS · Azure        |
               +----------+----------+             +--------------------+
                          |                                   ^
                          v                                   |
               +---------------------+             +--------------------+
               | export compatibility|             | planned: PVE /     |
-              | OVF · ExportVm · NFC|             | OpenStack / cloud  |
+              | OVF · ExportVm · NFC|             | OpenStack          |
               +----------+----------+             +--------------------+
                          |
                          v
@@ -351,9 +366,9 @@ internal/exportshim/     current vSphere OVF/ExportVm/NFC compatibility
 internal/fixture/        generated/real VMDK fixture registry
 internal/gateway/        public proxy, APIs, Range, faults and embedded UX
 internal/faults/         deterministic scenario state
-internal/personas/       nutanix (Prism v3) + hyperv (WS-Man) + shared store
+internal/personas/       nutanix, hyperv, aws, azure + shared store
 internal/selftest/       govmomi end-to-end probe
-integration/             vSphere + Nutanix/Hyper-V compatibility tests
+integration/             vSphere + Nutanix/Hyper-V + AWS/Azure compatibility tests
 docs/                    UX, architecture, Transiva guide, test matrix
 scripts/                 config, scenario, smoke, deploy and packaging helpers
 systemd/                 systemd unit (used by packages and deploy-remote.sh)

@@ -6,7 +6,7 @@ Chimera's **Command Center** is a single-page infrastructure console embedded in
 
 | Region | Role |
 |--------|------|
-| Left rail | Control Center nav, provider personas (vSphere active in UI; Nutanix/Hyper-V via `CHIMERA_PERSONA`; others roadmap), System Health ring |
+| Left rail | Control Center nav, provider personas (vSphere active in UI; Nutanix/Hyper-V/AWS/Azure via `CHIMERA_PERSONA`; others roadmap), System Health ring |
 | Top bar | Global search (⌘K), Scenario shortcut, Fault Studio (bolt), notifications bell → Live requests, Settings (gear), user menu (logout) |
 | Main column | Overview KPIs, topology, Top Activity, Live requests, VM inventory, Scenario Launcher, VMDK Library |
 | Right drawers | Fault Studio (fault injection) and Settings (listen address + admin credentials) |

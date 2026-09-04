@@ -2,11 +2,11 @@
 
 | Topic | Detail |
 |-------|--------|
-| Persona | `persona` / `CHIMERA_PERSONA` — `vsphere` (default), `nutanix`, or `hyperv` |
+| Persona | `persona` / `CHIMERA_PERSONA` — `vsphere` (default), `nutanix`, `hyperv`, `aws`, or `azure` |
 | Listen | `listen` in JSON config — default `0.0.0.0:8989` |
 | Public host | `public_host` for NFC URLs (use real hostname for remote clients) |
 | TLS | `tls: true` or `CHIMERA_TLS=true` — self-signed HTTPS |
-| Simulator auth | `username` / `password` — default `administrator@vsphere.local` / `vmware` (also used by Nutanix/Hyper-V basic auth) |
+| Simulator auth | `username` / `password` — default `administrator@vsphere.local` / `vmware` (also used by Nutanix/Hyper-V basic auth; AWS access key / secret; Azure subscription ID / bearer token) |
 | Admin UI login | Default `admin` / `admin`; `CHIMERA_ADMIN_USERNAME` / `CHIMERA_ADMIN_PASSWORD`; changeable in Settings drawer (vSphere only) |
 | Admin API token | `admin_token` — default `chimera-admin` (Bearer for curl/scenario scripts) |
 | Fixtures | `fixture_vmdk`, `fixture_vmdk_dir`, `fixture_vmdk_dirs`, `fixture_size_mb` (vSphere NFC path) |
@@ -24,6 +24,8 @@
 | `/` | Redirects to Command Center | `vsphere` |
 | `/api/nutanix/v3` | Prism-compatible REST (auth, VMs, power, disk export) | `nutanix` |
 | `/wsman` | Hyper-V WS-Man SOAP (Identify, Enumerate/Pull, power) | `hyperv` |
+| `/` and `/snapshots/...` | AWS EC2 Query + EBS snapshot blocks (SigV4) | `aws` |
+| `/subscriptions/...` | Azure ARM Compute + managed disk SAS (Bearer) | `azure` |
 
 Use `http(s)://<host>:8989/...` in docs and client configs — substitute your lab hostname or DNS name for `<host>`.
 

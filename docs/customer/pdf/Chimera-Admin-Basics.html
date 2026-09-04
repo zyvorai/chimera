@@ -35,7 +35,7 @@ hr{border:none;border-top:1px solid #e5e7eb;margin:1.2em 0}
 </thead>
 <tbody><tr>
 <td>Persona</td>
-<td><code>persona</code> / <code>CHIMERA_PERSONA</code> — <code>vsphere</code> (default), <code>nutanix</code>, or <code>hyperv</code></td>
+<td><code>persona</code> / <code>CHIMERA_PERSONA</code> — <code>vsphere</code> (default), <code>nutanix</code>, <code>hyperv</code>, <code>aws</code>, or <code>azure</code></td>
 </tr>
 <tr>
 <td>Listen</td>
@@ -51,7 +51,7 @@ hr{border:none;border-top:1px solid #e5e7eb;margin:1.2em 0}
 </tr>
 <tr>
 <td>Simulator auth</td>
-<td><code>username</code> / <code>password</code> — default <code>administrator@vsphere.local</code> / <code>vmware</code> (also used by Nutanix/Hyper-V basic auth)</td>
+<td><code>username</code> / <code>password</code> — default <code>administrator@vsphere.local</code> / <code>vmware</code> (also used by Nutanix/Hyper-V basic auth; AWS access key / secret; Azure subscription ID / bearer token)</td>
 </tr>
 <tr>
 <td>Admin UI login</td>
@@ -115,6 +115,16 @@ hr{border:none;border-top:1px solid #e5e7eb;margin:1.2em 0}
 <td><code>/wsman</code></td>
 <td>Hyper-V WS-Man SOAP (Identify, Enumerate/Pull, power)</td>
 <td><code>hyperv</code></td>
+</tr>
+<tr>
+<td><code>/</code> and <code>/snapshots/...</code></td>
+<td>AWS EC2 Query + EBS snapshot blocks (SigV4)</td>
+<td><code>aws</code></td>
+</tr>
+<tr>
+<td><code>/subscriptions/...</code></td>
+<td>Azure ARM Compute + managed disk SAS (Bearer)</td>
+<td><code>azure</code></td>
 </tr>
 </tbody></table>
 <p>Use <code>http(s)://&lt;host&gt;:8989/...</code> in docs and client configs — substitute your lab hostname or DNS name for <code>&lt;host&gt;</code>.</p>

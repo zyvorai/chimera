@@ -44,7 +44,7 @@ type Lab struct {
 
 func Start(ctx context.Context, cfg config.Config) (*Lab, error) {
 	switch strings.ToLower(strings.TrimSpace(cfg.Persona)) {
-	case "nutanix", "hyperv":
+	case "nutanix", "hyperv", "aws", "azure":
 		return StartHTTPPersona(ctx, cfg)
 	}
 	model := simulator.VPX()

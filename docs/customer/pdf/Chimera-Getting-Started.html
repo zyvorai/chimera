@@ -53,8 +53,8 @@ go build -o bin/chimera ./cmd/chimera
   -pass vmware
 </code></pre>
 <p>A passing self-test proves auth, inventory, OVF descriptor, <code>ExportVm</code>, and NFC lease download.</p>
-<h3>Optional: Nutanix or Hyper-V protocol personas</h3>
-<p>Command Center stays on the vSphere listener. For Prism or WS-Man smoke tests, start a second process (or replace the persona) with env overrides:</p>
+<h3>Optional: protocol personas (Nutanix, Hyper-V, AWS, Azure)</h3>
+<p>Command Center stays on the vSphere listener. For other protocol smoke tests, start a second process (or replace the persona) with env overrides:</p>
 <pre><code class="language-bash">CHIMERA_PERSONA=nutanix CHIMERA_USERNAME=admin CHIMERA_PASSWORD=secret \
   ./bin/chimera serve -listen 0.0.0.0:8990
 # → http://&lt;host&gt;:8990/api/nutanix/v3
@@ -62,8 +62,16 @@ go build -o bin/chimera ./cmd/chimera
 CHIMERA_PERSONA=hyperv CHIMERA_USERNAME=Administrator CHIMERA_PASSWORD=secret \
   ./bin/chimera serve -listen 0.0.0.0:8991
 # → http://&lt;host&gt;:8991/wsman
+
+CHIMERA_PERSONA=aws CHIMERA_USERNAME=AKIDCHIMERA CHIMERA_PASSWORD=chimera-secret \
+  ./bin/chimera serve -listen 0.0.0.0:8992
+# → EC2 Query at http://&lt;host&gt;:8992/
+
+CHIMERA_PERSONA=azure CHIMERA_USERNAME=11111111-2222-3333-4444-555555555555 \
+  CHIMERA_PASSWORD=chimera-azure-token ./bin/chimera serve -listen 0.0.0.0:8993
+# → ARM at http://&lt;host&gt;:8993/subscriptions/...
 </code></pre>
-<p>Coverage today: Nutanix basic auth, cluster identity, VM list/detail, power tasks, disk export bytes; Hyper-V Identify, Enumerate/Pull, <code>RequestStateChange</code>. See product-repo <code>README.md</code> and <code>docs/PROVIDER_ARCHITECTURE.md</code>.</p>
+<p>See product-repo <code>README.md</code>, <code>docs/PROVIDER_ARCHITECTURE.md</code>, and <code>docs/AWS_AZURE_PERSONAS.md</code>.</p>
 <h2>4. First useful checks in the UI</h2>
 <ol>
 <li>Overview KPIs populate after self-test (requests, sessions, exports).</li>
@@ -100,7 +108,7 @@ CHIMERA_PERSONA=hyperv CHIMERA_USERNAME=Administrator CHIMERA_PASSWORD=secret \
 </thead>
 <tbody><tr>
 <td>Left rail</td>
-<td>Control Center nav, provider personas (vSphere active in UI; Nutanix/Hyper-V via <code>CHIMERA_PERSONA</code>; others roadmap), System Health ring</td>
+<td>Control Center nav, provider personas (vSphere active in UI; Nutanix/Hyper-V/AWS/Azure via <code>CHIMERA_PERSONA</code>; others roadmap), System Health ring</td>
 </tr>
 <tr>
 <td>Top bar</td>

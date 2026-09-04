@@ -9,7 +9,9 @@ Chimera evolves around provider **personas**, not around one vCenter simulator. 
 | vSphere | `internal/lab` + `exportshim` + govmomi simulator | `/sdk`, NFC, `/__chimera/` | Yes |
 | Nutanix Prism | `internal/personas/nutanix` via `lab.StartHTTPPersona` | `/api/nutanix/v3` | No (protocol only) |
 | Hyper-V | `internal/personas/hyperv` via `lab.StartHTTPPersona` | `/wsman` | No (protocol only) |
-| Proxmox / OpenStack / Cloud | — | — | Planned |
+| AWS | `internal/personas/aws` via `lab.StartHTTPPersona` | `/` (EC2 Query), `/snapshots/...` (EBS) | No (protocol only) |
+| Azure | `internal/personas/azure` via `lab.StartHTTPPersona` | ARM `/subscriptions/...`, disk SAS | No (protocol only) |
+| Proxmox / OpenStack | — | — | Planned |
 
 Select with `persona` in JSON config or `CHIMERA_PERSONA` (`vsphere` default). Shared VM/task/disk seed lives in `internal/personas/common`.
 
@@ -28,7 +30,25 @@ Select with `persona` in JSON config or `CHIMERA_PERSONA` (`vsphere` default). S
 - `RequestStateChange`
 - Deterministic VM inventory
 
-Next iteration (not yet): Nutanix v4, categories/projects/images, Hyper-V WMI association traversal, snapshots/checkpoints, VHDX byte-range export, SCVMM persona.
+### AWS coverage (EC2 + EBS)
+
+- SigV4 authentication (HMAC credential scope + payload hash)
+- `DescribeInstances`, `DescribeVolumes`, `StartInstances`, `StopInstances`
+- `CreateSnapshot`, `DescribeSnapshots`
+- EBS `ListSnapshotBlocks` / `GetSnapshotBlock` with checksum headers
+
+Details: [`AWS_AZURE_PERSONAS.md`](AWS_AZURE_PERSONAS.md).
+
+### Azure coverage (ARM Compute + disks)
+
+- Bearer token auth; subscription ID in path
+- VM list/get/instanceView; `start` / `powerOff` / `deallocate` / `restart`
+- Managed disk get + `beginGetAccess`
+- Azure-AsyncOperation polling; SAS-style Range disk download
+
+Details: [`AWS_AZURE_PERSONAS.md`](AWS_AZURE_PERSONAS.md).
+
+Next iteration (not yet): Nutanix v4, categories/projects/images, Hyper-V WMI association traversal, snapshots/checkpoints, VHDX byte-range export, SCVMM, deeper AWS/Azure control-plane fidelity, Proxmox/OpenStack personas.
 
 ## Proposed contract
 
@@ -68,12 +88,13 @@ internal/
     common/          # shared Store (landed)
     nutanix/         # landed
     hyperv/          # landed
+    aws/             # landed
+    azure/           # landed
     proxmox/
     openstack/
-    cloud/
 ```
 
-Nutanix and Hyper-V already land under this layout. They intentionally skip the Command Center gateway for now.
+Nutanix, Hyper-V, AWS, and Azure already land under this layout. They intentionally skip the Command Center gateway for now.
 
 The current `internal/exportshim` and govmomi simulator logic remain the seed of `personas/vsphere` and can be moved there when the full `internal/core` Persona interface is introduced.
 

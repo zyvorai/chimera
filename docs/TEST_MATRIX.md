@@ -1,6 +1,6 @@
 # Chimera test matrix
 
-Use this matrix as the acceptance suite for Chimera personas. Sections 1–74 focus on Transiva's vSphere provider; sections 75–87 cover Nutanix and Hyper-V protocol personas.
+Use this matrix as the acceptance suite for Chimera personas. Sections 1–74 focus on Transiva's vSphere provider; sections 75–87 cover Nutanix and Hyper-V; sections 88–98 cover AWS and Azure protocol personas.
 
 ## Authentication and session
 
@@ -75,7 +75,7 @@ Use this matrix as the acceptance suite for Chimera personas. Sections 1–74 fo
 ```bash
 make run
 ./bin/chimera selftest -url http://127.0.0.1:8989/sdk -user administrator@vsphere.local -pass vmware
-go test ./integration/ -run Persona
+go test ./integration/ -run 'Persona|AWS|Azure'
 ./scripts/scenario.sh flaky
 ./scripts/scenario.sh resume
 ./scripts/scenario.sh clean
@@ -132,3 +132,20 @@ go test ./integration/ -run Persona
 85. Enumerate returns an enumeration context; Pull returns `Msvm_ComputerSystem` inventory.
 86. `RequestStateChange` returns async `ReturnValue` 4096 and updates VM power.
 87. Covered by `integration/personas_e2e_test.go` (`TestHyperVWSManIdentifyEnumeratePullAndPowerE2E`).
+
+## AWS EC2/EBS persona (`CHIMERA_PERSONA=aws`)
+
+88. SigV4 rejects missing/wrong credentials with `AuthFailure`.
+89. `DescribeInstances` returns seeded instances and attached volumes.
+90. `StartInstances` / `StopInstances` transition instance state.
+91. `CreateSnapshot` returns a `snap-chimera*` id; `DescribeSnapshots` lists it.
+92. `GET /snapshots/{id}/blocks` returns block index/token list with 512 KiB block size.
+93. `GET /snapshots/{id}/blocks/{index}` returns deterministic block bytes with SHA256 checksum headers.
+94. Covered by `integration/cloud_personas_e2e_test.go` (`TestAWSEC2DiscoveryPowerSnapshotAndBlockExportE2E`).
+
+## Azure ARM persona (`CHIMERA_PERSONA=azure`)
+
+95. Bearer auth rejects missing/wrong tokens; subscription mismatch returns not found.
+96. VM list/get/instanceView and `start`/`powerOff` with `Azure-AsyncOperation` polling.
+97. `beginGetAccess` yields SAS URL; ranged GET returns 206 PageBlob bytes.
+98. Covered by `integration/cloud_personas_e2e_test.go` (`TestAzureARMDiscoveryPowerAndManagedDiskAccessE2E`).

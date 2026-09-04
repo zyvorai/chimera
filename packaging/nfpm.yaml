@@ -6,8 +6,8 @@ section: net
 priority: optional
 maintainer: "Zyvor AI Labs <info@zyvor.dev>"
 description: |
-  Programmable infrastructure endpoint simulator (vSphere + Nutanix Prism v3
-  + Hyper-V WS-Man personas; Proxmox, OpenStack and cloud personas planned).
+  Programmable infrastructure endpoint simulator (vSphere, Nutanix Prism v3,
+  Hyper-V WS-Man, AWS EC2/EBS, Azure ARM; Proxmox and OpenStack planned).
 vendor: "Zyvor AI Labs"
 homepage: "https://github.com/zyvorai/chimera"
 license: Apache-2.0

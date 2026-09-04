@@ -41,9 +41,9 @@ Log in with **admin** / **admin** (change later in Settings). Without a session 
 
 A passing self-test proves auth, inventory, OVF descriptor, `ExportVm`, and NFC lease download.
 
-### Optional: Nutanix or Hyper-V protocol personas
+### Optional: protocol personas (Nutanix, Hyper-V, AWS, Azure)
 
-Command Center stays on the vSphere listener. For Prism or WS-Man smoke tests, start a second process (or replace the persona) with env overrides:
+Command Center stays on the vSphere listener. For other protocol smoke tests, start a second process (or replace the persona) with env overrides:
 
 ```bash
 CHIMERA_PERSONA=nutanix CHIMERA_USERNAME=admin CHIMERA_PASSWORD=secret \
@@ -53,9 +53,17 @@ CHIMERA_PERSONA=nutanix CHIMERA_USERNAME=admin CHIMERA_PASSWORD=secret \
 CHIMERA_PERSONA=hyperv CHIMERA_USERNAME=Administrator CHIMERA_PASSWORD=secret \
   ./bin/chimera serve -listen 0.0.0.0:8991
 # → http://<host>:8991/wsman
+
+CHIMERA_PERSONA=aws CHIMERA_USERNAME=AKIDCHIMERA CHIMERA_PASSWORD=chimera-secret \
+  ./bin/chimera serve -listen 0.0.0.0:8992
+# → EC2 Query at http://<host>:8992/
+
+CHIMERA_PERSONA=azure CHIMERA_USERNAME=11111111-2222-3333-4444-555555555555 \
+  CHIMERA_PASSWORD=chimera-azure-token ./bin/chimera serve -listen 0.0.0.0:8993
+# → ARM at http://<host>:8993/subscriptions/...
 ```
 
-Coverage today: Nutanix basic auth, cluster identity, VM list/detail, power tasks, disk export bytes; Hyper-V Identify, Enumerate/Pull, `RequestStateChange`. See product-repo `README.md` and `docs/PROVIDER_ARCHITECTURE.md`.
+See product-repo `README.md`, `docs/PROVIDER_ARCHITECTURE.md`, and `docs/AWS_AZURE_PERSONAS.md`.
 
 ## 4. First useful checks in the UI
 

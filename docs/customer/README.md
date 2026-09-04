@@ -1,8 +1,8 @@
 # Chimera — Customer Documentation
 
-**Chimera** is a programmable infrastructure simulation engine for integration-testing migration, discovery, export, and automation software **without** provisioning real vSphere, Nutanix, or Hyper-V.
+**Chimera** is a programmable infrastructure simulation engine for integration-testing migration, discovery, export, and automation software **without** provisioning real vSphere, Nutanix, Hyper-V, AWS, or Azure.
 
-The **Command Center** lives at `/__chimera/` on the same listener as the fake vCenter SDK (vSphere persona). Nutanix Prism (`/api/nutanix/v3`) and Hyper-V WS-Man (`/wsman`) are available via `CHIMERA_PERSONA` as protocol surfaces without the dashboard.
+The **Command Center** lives at `/__chimera/` on the same listener as the fake vCenter SDK (vSphere persona). Nutanix Prism (`/api/nutanix/v3`), Hyper-V WS-Man (`/wsman`), AWS EC2/EBS, and Azure ARM are available via `CHIMERA_PERSONA` as protocol surfaces without the dashboard.
 
 | You want to… | Open |
 |--------------|------|
@@ -35,11 +35,13 @@ Output lands in [`pdf/`](pdf/):
   vSphere SDK     →  http(s)://<host>:8989/sdk
   Nutanix Prism   →  http(s)://<host>:8989/api/nutanix/v3   (persona=nutanix)
   Hyper-V WS-Man  →  http(s)://<host>:8989/wsman            (persona=hyperv)
+  AWS EC2/EBS     →  http(s)://<host>:8989/                 (persona=aws)
+  Azure ARM       →  http(s)://<host>:8989/subscriptions/... (persona=azure)
   Simulator login →  administrator@vsphere.local / vmware   (vSphere)
   UI login        →  admin / admin  (change in Settings)
 ```
 
-Chimera is a **test and compatibility appliance**. It is not VMware, Nutanix, or Microsoft software and is not for production workloads.
+Chimera is a **test and compatibility appliance**. It is not VMware, Nutanix, Microsoft, or Amazon software and is not for production workloads.
 
 ---
 

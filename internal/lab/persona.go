@@ -14,11 +14,13 @@ import (
 	"time"
 
 	"github.com/zyvorai/chimera/internal/config"
+	awspersona "github.com/zyvorai/chimera/internal/personas/aws"
+	azurepersona "github.com/zyvorai/chimera/internal/personas/azure"
 	"github.com/zyvorai/chimera/internal/personas/hyperv"
 	"github.com/zyvorai/chimera/internal/personas/nutanix"
 )
 
-// StartHTTPPersona starts the Nutanix Prism or Hyper-V WS-Man persona.
+// StartHTTPPersona starts the Nutanix, Hyper-V, AWS, or Azure persona.
 // vSphere continues to use the existing govmomi-backed Start path.
 func StartHTTPPersona(ctx context.Context, cfg config.Config) (*Lab, error) {
 	ln, err := net.Listen("tcp", cfg.Listen)
@@ -45,6 +47,12 @@ func StartHTTPPersona(ctx context.Context, cfg config.Config) (*Lab, error) {
 	case "hyperv":
 		h = hyperv.New(cfg.Username, cfg.Password, cfg.VMsPerPool)
 		endpoint = "/wsman"
+	case "aws":
+		h = awspersona.New(cfg.Username, cfg.Password, cfg.VMsPerPool)
+		endpoint = "/"
+	case "azure":
+		h = azurepersona.New(cfg.Username, cfg.Password, cfg.VMsPerPool)
+		endpoint = "/subscriptions/" + cfg.Username + "/providers/Microsoft.Compute/virtualMachines"
 	default:
 		ln.Close()
 		return nil, fmt.Errorf("unsupported HTTP persona %q", cfg.Persona)

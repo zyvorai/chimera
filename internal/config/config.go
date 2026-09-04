@@ -90,9 +90,9 @@ func Load(path string) (Config, error) {
 
 func (c Config) Validate() error {
 	switch strings.ToLower(strings.TrimSpace(c.Persona)) {
-	case "vsphere", "nutanix", "hyperv":
+	case "vsphere", "nutanix", "hyperv", "aws", "azure":
 	default:
-		return fmt.Errorf("persona must be one of vsphere, nutanix, hyperv; got %q", c.Persona)
+		return fmt.Errorf("persona must be one of vsphere, nutanix, hyperv, aws, azure; got %q", c.Persona)
 	}
 	if strings.TrimSpace(c.Listen) == "" {
 		return errors.New("listen cannot be empty")

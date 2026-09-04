@@ -469,7 +469,8 @@ func (g *Gateway) bootstrap() map[string]any {
 		{"id": "proxmox", "name": "Proxmox VE", "short": "Proxmox", "status": "planned", "protocol": "REST API", "accent": "orange"},
 		{"id": "openstack", "name": "OpenStack", "short": "OpenStack", "status": "planned", "protocol": "Nova / Glance", "accent": "rose"},
 		{"id": "hyperv", "name": "Microsoft Hyper-V", "short": "Hyper-V", "status": "available", "protocol": "WinRM / WMI", "accent": "blue"},
-		{"id": "cloud", "name": "Cloud APIs", "short": "Cloud", "status": "planned", "protocol": "AWS / Azure style", "accent": "green"},
+		{"id": "aws", "name": "Amazon Web Services", "short": "AWS", "status": "available", "protocol": "EC2 Query / EBS blocks", "accent": "orange"},
+		{"id": "azure", "name": "Microsoft Azure", "short": "Azure", "status": "available", "protocol": "ARM Compute / Disks", "accent": "green"},
 	}
 	return map[string]any{
 		"product": "Chimera", "tagline": "One engine. Many infrastructure personalities.", "version": g.meta.Version,

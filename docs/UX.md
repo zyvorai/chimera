@@ -67,7 +67,7 @@ Either path can optionally pin the file to a specific VM, which overrides the au
 
 ### Provider personas
 
-The left rail treats infrastructure implementations as first-class personas. **vSphere** is active in Command Center today. **Nutanix Prism** and **Hyper-V** are available as protocol personas (`CHIMERA_PERSONA=nutanix|hyperv`) but do not mount the Command Center yet — start a separate process for those endpoints. Proxmox VE, OpenStack, and cloud/API personalities remain standby roadmap providers.
+The left rail treats infrastructure implementations as first-class personas. **vSphere** is active in Command Center today. **Nutanix Prism**, **Hyper-V**, **AWS**, and **Azure** are available as protocol personas (`CHIMERA_PERSONA=nutanix|hyperv|aws|azure`) but do not mount the Command Center yet — start a separate process for those endpoints. Proxmox VE and OpenStack remain standby roadmap providers.
 
 ### Scenario Launcher
 
@@ -136,7 +136,7 @@ POST /__chimera/api/vmdks/assign
 
 ## Future UX additions
 
-- Command Center shells for Nutanix / Hyper-V (today those personas are protocol-only)
+- Command Center shells for Nutanix / Hyper-V / AWS / Azure (today those personas are protocol-only)
 - in-UI persona activation / hot switching
 - drag-and-drop synthetic topology builder
 - request trace and SOAP/REST inspector
