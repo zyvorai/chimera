@@ -1,6 +1,6 @@
 # Chimera test matrix
 
-Use this matrix as the acceptance suite for Transiva's vSphere provider.
+Use this matrix as the acceptance suite for Chimera personas. Sections 1–74 focus on Transiva's vSphere provider; sections 75–87 cover Nutanix and Hyper-V protocol personas.
 
 ## Authentication and session
 
@@ -75,6 +75,7 @@ Use this matrix as the acceptance suite for Transiva's vSphere provider.
 ```bash
 make run
 ./bin/chimera selftest -url http://127.0.0.1:8989/sdk -user administrator@vsphere.local -pass vmware
+go test ./integration/ -run Persona
 ./scripts/scenario.sh flaky
 ./scripts/scenario.sh resume
 ./scripts/scenario.sh clean
@@ -112,3 +113,22 @@ make run
 72. `POST /__chimera/login` accepts the configured username/password (default `admin`/`admin`) and returns the same bearer token every other protected endpoint expects; wrong credentials return 401.
 73. `POST /__chimera/admin/credentials` (authenticated) changes the live admin login; the old credentials then fail `/login` and the new ones succeed. Unauthenticated calls are rejected.
 74. `GET /` redirects (302) to `/__chimera/`.
+
+## Nutanix Prism persona (`CHIMERA_PERSONA=nutanix`)
+
+75. Basic auth rejects missing/wrong credentials with 401 + `WWW-Authenticate`.
+76. `GET /api/nutanix/v3/cluster` returns cluster identity.
+77. `POST /api/nutanix/v3/vms/list` returns seeded VM entities (`vms_per_pool`).
+78. `GET /api/nutanix/v3/vms/{id}` returns VM detail with disk list.
+79. `POST /api/nutanix/v3/vms/{id}/set_power_state` creates a task and updates power state.
+80. `GET /api/nutanix/v3/tasks/{id}` returns task status.
+81. `GET /api/nutanix/v3/vms/{id}/disks/{disk}/data` returns deterministic export bytes.
+82. Covered by `integration/personas_e2e_test.go` (`TestNutanixDiscoveryPowerAndDiskExportE2E`).
+
+## Hyper-V WS-Man persona (`CHIMERA_PERSONA=hyperv`)
+
+83. Basic auth rejects missing/wrong credentials with 401.
+84. WS-Man Identify returns Chimera product identity.
+85. Enumerate returns an enumeration context; Pull returns `Msvm_ComputerSystem` inventory.
+86. `RequestStateChange` returns async `ReturnValue` 4096 and updates VM power.
+87. Covered by `integration/personas_e2e_test.go` (`TestHyperVWSManIdentifyEnumeratePullAndPowerE2E`).

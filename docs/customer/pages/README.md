@@ -4,6 +4,12 @@ Each guide follows: Purpose → When to use it → How to get there → Operate 
 
 Every route is also listed in the [complete page index](../PAGE_INDEX.md).
 
+## Auth
+
+| Page | What it covers |
+|------|----------------|
+| [Login](auth/login.md) | Authenticate the browser session before Command Center chrome or live data loads. |
+
 ## Command Center
 
 | Page | What it covers |
@@ -21,4 +27,4 @@ Every route is also listed in the [complete page index](../PAGE_INDEX.md).
 
 ---
 
-10 guides. Regenerate: `node scripts/customer-docs/generate-guide-index.mjs`.
+11 guides. Regenerate: `node scripts/customer-docs/generate-guide-index.mjs`.

@@ -326,16 +326,16 @@ Client / migration tool ---> +---------------------------+
                          |                                   |
                          v                                   v
               +---------------------+             +--------------------+
-              | vSphere persona     |             | future personas    |
-              | govmomi simulator   |             | Nutanix / PVE /    |
-              | SOAP/VIM inventory  |             | OpenStack / Hyper-V|
+              | vSphere persona     |             | HTTP personas      |
+              | govmomi simulator   |             | Nutanix Prism v3   |
+              | SOAP/VIM inventory  |             | Hyper-V WS-Man     |
               +----------+----------+             +--------------------+
-                         |
-                         v
-              +---------------------+
-              | export compatibility|
-              | OVF · ExportVm · NFC|
-              +----------+----------+
+                         |                                   ^
+                         v                                   |
+              +---------------------+             +--------------------+
+              | export compatibility|             | planned: PVE /     |
+              | OVF · ExportVm · NFC|             | OpenStack / cloud  |
+              +----------+----------+             +--------------------+
                          |
                          v
                     fixture store

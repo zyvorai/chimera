@@ -1,6 +1,34 @@
 # Chimera Provider Persona Architecture
 
-Chimera should evolve around provider **personas**, not around one vCenter simulator. A persona is a protocol-compatible control-plane surface with its own authentication, inventory model, operations, export semantics and fault extensions.
+Chimera evolves around provider **personas**, not around one vCenter simulator. A persona is a protocol-compatible control-plane surface with its own authentication, inventory model, operations, export semantics and fault extensions.
+
+## Status today
+
+| Persona | Package / entry | Endpoints | Command Center |
+|---|---|---|---|
+| vSphere | `internal/lab` + `exportshim` + govmomi simulator | `/sdk`, NFC, `/__chimera/` | Yes |
+| Nutanix Prism | `internal/personas/nutanix` via `lab.StartHTTPPersona` | `/api/nutanix/v3` | No (protocol only) |
+| Hyper-V | `internal/personas/hyperv` via `lab.StartHTTPPersona` | `/wsman` | No (protocol only) |
+| Proxmox / OpenStack / Cloud | — | — | Planned |
+
+Select with `persona` in JSON config or `CHIMERA_PERSONA` (`vsphere` default). Shared VM/task/disk seed lives in `internal/personas/common`.
+
+### Nutanix coverage (Prism v3-compatible)
+
+- Basic auth
+- Cluster identity
+- VM inventory list/detail
+- Power-state task creation + task lookup
+- Deterministic virtual-disk export bytes
+
+### Hyper-V coverage (WS-Man)
+
+- WS-Man Identify
+- Enumerate / Pull of `Msvm_ComputerSystem`
+- `RequestStateChange`
+- Deterministic VM inventory
+
+Next iteration (not yet): Nutanix v4, categories/projects/images, Hyper-V WMI association traversal, snapshots/checkpoints, VHDX byte-range export, SCVMM persona.
 
 ## Proposed contract
 
@@ -37,14 +65,15 @@ internal/
       inventory.go
       export.go
       nfc.go
-    nutanix/
+    common/          # shared Store (landed)
+    nutanix/         # landed
+    hyperv/          # landed
     proxmox/
     openstack/
-    hyperv/
     cloud/
 ```
 
-Nutanix (`internal/personas/nutanix`) and Hyper-V (`internal/personas/hyperv`) already land under this layout, selected via `config.Persona` / `CHIMERA_PERSONA` and started from `lab.StartHTTPPersona`. They share inventory in `internal/personas/common` and intentionally skip the Command Center gateway for now.
+Nutanix and Hyper-V already land under this layout. They intentionally skip the Command Center gateway for now.
 
 The current `internal/exportshim` and govmomi simulator logic remain the seed of `personas/vsphere` and can be moved there when the full `internal/core` Persona interface is introduced.
 

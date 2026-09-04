@@ -24,7 +24,7 @@ hr{border:none;border-top:1px solid #e5e7eb;margin:1.2em 0}
 <section class="cover"><div class="kicker">ZyvorAI Labs · Customer Documentation</div>
 <h1>Chi<span>mera</span></h1>
 <div class="sub">Admin Basics</div>
-<div class="badge">2026-08-29</div>
+<div class="badge">2026-09-04</div>
 <div class="foot">zyvor.dev · Confidential — for licensed customers</div></section>
 <main><table>
 <thead>
@@ -34,6 +34,10 @@ hr{border:none;border-top:1px solid #e5e7eb;margin:1.2em 0}
 </tr>
 </thead>
 <tbody><tr>
+<td>Persona</td>
+<td><code>persona</code> / <code>CHIMERA_PERSONA</code> — <code>vsphere</code> (default), <code>nutanix</code>, or <code>hyperv</code></td>
+</tr>
+<tr>
 <td>Listen</td>
 <td><code>listen</code> in JSON config — default <code>0.0.0.0:8989</code></td>
 </tr>
@@ -47,11 +51,11 @@ hr{border:none;border-top:1px solid #e5e7eb;margin:1.2em 0}
 </tr>
 <tr>
 <td>Simulator auth</td>
-<td><code>username</code> / <code>password</code> — default <code>administrator@vsphere.local</code> / <code>vmware</code></td>
+<td><code>username</code> / <code>password</code> — default <code>administrator@vsphere.local</code> / <code>vmware</code> (also used by Nutanix/Hyper-V basic auth)</td>
 </tr>
 <tr>
 <td>Admin UI login</td>
-<td>Default <code>admin</code> / <code>admin</code>; <code>CHIMERA_ADMIN_USERNAME</code> / <code>CHIMERA_ADMIN_PASSWORD</code>; changeable in Settings drawer</td>
+<td>Default <code>admin</code> / <code>admin</code>; <code>CHIMERA_ADMIN_USERNAME</code> / <code>CHIMERA_ADMIN_PASSWORD</code>; changeable in Settings drawer (vSphere only)</td>
 </tr>
 <tr>
 <td>Admin API token</td>
@@ -59,7 +63,7 @@ hr{border:none;border-top:1px solid #e5e7eb;margin:1.2em 0}
 </tr>
 <tr>
 <td>Fixtures</td>
-<td><code>fixture_vmdk</code>, <code>fixture_vmdk_dir</code>, <code>fixture_vmdk_dirs</code>, <code>fixture_size_mb</code></td>
+<td><code>fixture_vmdk</code>, <code>fixture_vmdk_dir</code>, <code>fixture_vmdk_dirs</code>, <code>fixture_size_mb</code> (vSphere NFC path)</td>
 </tr>
 <tr>
 <td>Estate shape</td>
@@ -84,19 +88,33 @@ hr{border:none;border-top:1px solid #e5e7eb;margin:1.2em 0}
 <tr>
 <th>Path</th>
 <th>Purpose</th>
+<th>Persona</th>
 </tr>
 </thead>
 <tbody><tr>
 <td><code>/__chimera/</code></td>
 <td>Command Center UX</td>
+<td><code>vsphere</code></td>
 </tr>
 <tr>
 <td><code>/sdk</code></td>
 <td>vSphere SOAP/VIM for govmomi / Transiva</td>
+<td><code>vsphere</code></td>
 </tr>
 <tr>
 <td><code>/</code></td>
 <td>Redirects to Command Center</td>
+<td><code>vsphere</code></td>
+</tr>
+<tr>
+<td><code>/api/nutanix/v3</code></td>
+<td>Prism-compatible REST (auth, VMs, power, disk export)</td>
+<td><code>nutanix</code></td>
+</tr>
+<tr>
+<td><code>/wsman</code></td>
+<td>Hyper-V WS-Man SOAP (Identify, Enumerate/Pull, power)</td>
+<td><code>hyperv</code></td>
 </tr>
 </tbody></table>
 <p>Use <code>http(s)://&lt;host&gt;:8989/...</code> in docs and client configs — substitute your lab hostname or DNS name for <code>&lt;host&gt;</code>.</p>

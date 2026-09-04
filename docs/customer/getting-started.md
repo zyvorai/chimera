@@ -41,6 +41,22 @@ Log in with **admin** / **admin** (change later in Settings). Without a session 
 
 A passing self-test proves auth, inventory, OVF descriptor, `ExportVm`, and NFC lease download.
 
+### Optional: Nutanix or Hyper-V protocol personas
+
+Command Center stays on the vSphere listener. For Prism or WS-Man smoke tests, start a second process (or replace the persona) with env overrides:
+
+```bash
+CHIMERA_PERSONA=nutanix CHIMERA_USERNAME=admin CHIMERA_PASSWORD=secret \
+  ./bin/chimera serve -listen 0.0.0.0:8990
+# → http://<host>:8990/api/nutanix/v3
+
+CHIMERA_PERSONA=hyperv CHIMERA_USERNAME=Administrator CHIMERA_PASSWORD=secret \
+  ./bin/chimera serve -listen 0.0.0.0:8991
+# → http://<host>:8991/wsman
+```
+
+Coverage today: Nutanix basic auth, cluster identity, VM list/detail, power tasks, disk export bytes; Hyper-V Identify, Enumerate/Pull, `RequestStateChange`. See product-repo `README.md` and `docs/PROVIDER_ARCHITECTURE.md`.
+
 ## 4. First useful checks in the UI
 
 1. Overview KPIs populate after self-test (requests, sessions, exports).

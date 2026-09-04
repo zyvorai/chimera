@@ -2,13 +2,14 @@
 
 | Topic | Detail |
 |-------|--------|
+| Persona | `persona` / `CHIMERA_PERSONA` — `vsphere` (default), `nutanix`, or `hyperv` |
 | Listen | `listen` in JSON config — default `0.0.0.0:8989` |
 | Public host | `public_host` for NFC URLs (use real hostname for remote clients) |
 | TLS | `tls: true` or `CHIMERA_TLS=true` — self-signed HTTPS |
-| Simulator auth | `username` / `password` — default `administrator@vsphere.local` / `vmware` |
-| Admin UI login | Default `admin` / `admin`; `CHIMERA_ADMIN_USERNAME` / `CHIMERA_ADMIN_PASSWORD`; changeable in Settings drawer |
+| Simulator auth | `username` / `password` — default `administrator@vsphere.local` / `vmware` (also used by Nutanix/Hyper-V basic auth) |
+| Admin UI login | Default `admin` / `admin`; `CHIMERA_ADMIN_USERNAME` / `CHIMERA_ADMIN_PASSWORD`; changeable in Settings drawer (vSphere only) |
 | Admin API token | `admin_token` — default `chimera-admin` (Bearer for curl/scenario scripts) |
-| Fixtures | `fixture_vmdk`, `fixture_vmdk_dir`, `fixture_vmdk_dirs`, `fixture_size_mb` |
+| Fixtures | `fixture_vmdk`, `fixture_vmdk_dir`, `fixture_vmdk_dirs`, `fixture_size_mb` (vSphere NFC path) |
 | Estate shape | `datacenters`, `clusters`, `hosts_per_cluster`, `datastores`, `vms_per_pool` |
 | Packages | `make package` → `.deb`/`.rpm`; systemd unit `chimera.service` |
 | Remote deploy | `./scripts/deploy-remote.sh <host> [user]` |
@@ -16,11 +17,13 @@
 
 ## Endpoints
 
-| Path | Purpose |
-|------|---------|
-| `/__chimera/` | Command Center UX |
-| `/sdk` | vSphere SOAP/VIM for govmomi / Transiva |
-| `/` | Redirects to Command Center |
+| Path | Purpose | Persona |
+|------|---------|---------|
+| `/__chimera/` | Command Center UX | `vsphere` |
+| `/sdk` | vSphere SOAP/VIM for govmomi / Transiva | `vsphere` |
+| `/` | Redirects to Command Center | `vsphere` |
+| `/api/nutanix/v3` | Prism-compatible REST (auth, VMs, power, disk export) | `nutanix` |
+| `/wsman` | Hyper-V WS-Man SOAP (Identify, Enumerate/Pull, power) | `hyperv` |
 
 Use `http(s)://<host>:8989/...` in docs and client configs — substitute your lab hostname or DNS name for `<host>`.
 

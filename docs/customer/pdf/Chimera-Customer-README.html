@@ -24,10 +24,10 @@ hr{border:none;border-top:1px solid #e5e7eb;margin:1.2em 0}
 <section class="cover"><div class="kicker">ZyvorAI Labs · Customer Documentation</div>
 <h1>Chi<span>mera</span></h1>
 <div class="sub">Customer Documentation Overview</div>
-<div class="badge">2026-08-29</div>
+<div class="badge">2026-09-04</div>
 <div class="foot">zyvor.dev · Confidential — for licensed customers</div></section>
-<main><p><strong>Chimera</strong> is a programmable infrastructure simulation engine for integration-testing migration, discovery, export, and automation software <strong>without</strong> provisioning real vSphere (or other planned personas).</p>
-<p>The <strong>Command Center</strong> lives at <code>/__chimera/</code> on the same listener as the fake vCenter SDK.</p>
+<main><p><strong>Chimera</strong> is a programmable infrastructure simulation engine for integration-testing migration, discovery, export, and automation software <strong>without</strong> provisioning real vSphere, Nutanix, or Hyper-V.</p>
+<p>The <strong>Command Center</strong> lives at <code>/__chimera/</code> on the same listener as the fake vCenter SDK (vSphere persona). Nutanix Prism (<code>/api/nutanix/v3</code>) and Hyper-V WS-Man (<code>/wsman</code>) are available via <code>CHIMERA_PERSONA</code> as protocol surfaces without the dashboard.</p>
 <table>
 <thead>
 <tr>
@@ -72,12 +72,14 @@ hr{border:none;border-top:1px solid #e5e7eb;margin:1.2em 0}
 <li><code>Chimera-Admin-Basics.pdf</code></li>
 </ul>
 <h2>Product at a glance</h2>
-<pre><code class="language-text">  Command Center  →  http(s)://&lt;host&gt;:8989/__chimera/
+<pre><code class="language-text">  Command Center  →  http(s)://&lt;host&gt;:8989/__chimera/   (persona=vsphere)
   vSphere SDK     →  http(s)://&lt;host&gt;:8989/sdk
-  Simulator login →  administrator@vsphere.local / vmware
+  Nutanix Prism   →  http(s)://&lt;host&gt;:8989/api/nutanix/v3   (persona=nutanix)
+  Hyper-V WS-Man  →  http(s)://&lt;host&gt;:8989/wsman            (persona=hyperv)
+  Simulator login →  administrator@vsphere.local / vmware   (vSphere)
   UI login        →  admin / admin  (change in Settings)
 </code></pre>
-<p>Chimera is a <strong>test and compatibility appliance</strong>. It is not VMware software and is not for production workloads.</p>
+<p>Chimera is a <strong>test and compatibility appliance</strong>. It is not VMware, Nutanix, or Microsoft software and is not for production workloads.</p>
 <hr>
 <p><em>Zyvor · <a href="https://zyvor.dev">zyvor.dev</a> · Chimera · Apache-2.0</em></p>
 </main></body></html>
