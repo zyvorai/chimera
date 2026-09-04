@@ -44,7 +44,9 @@ internal/
     cloud/
 ```
 
-The current `internal/exportshim` and govmomi simulator logic are the seed of `personas/vsphere` and can be moved there when the second persona is implemented.
+Nutanix (`internal/personas/nutanix`) and Hyper-V (`internal/personas/hyperv`) already land under this layout, selected via `config.Persona` / `CHIMERA_PERSONA` and started from `lab.StartHTTPPersona`. They share inventory in `internal/personas/common` and intentionally skip the Command Center gateway for now.
+
+The current `internal/exportshim` and govmomi simulator logic remain the seed of `personas/vsphere` and can be moved there when the full `internal/core` Persona interface is introduced.
 
 ## Persona responsibilities
 

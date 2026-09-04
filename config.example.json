@@ -1,4 +1,5 @@
 {
+  "persona": "vsphere",
   "listen": "0.0.0.0:8989",
   "public_host": "localhost:8989",
   "tls": false,

@@ -6,7 +6,7 @@
 
 **Chimera** is a programmable infrastructure simulation engine for integration-testing migration, discovery, export and automation software without provisioning the real infrastructure platform.
 
-The architecture is provider-persona based: **vSphere is the first fully implemented persona**, while the control plane and UX are designed to grow into Nutanix Prism, Proxmox VE, OpenStack, Hyper-V and cloud/API personalities.
+The architecture is provider-persona based: **vSphere is the deepest persona** (Command Center + govmomi), with **Nutanix Prism v3** and **Hyper-V WS-Man** available as protocol surfaces. Proxmox VE, OpenStack, and cloud/API personalities remain on the roadmap.
 
 > **One engine. Many infrastructure personalities.**
 
@@ -56,18 +56,32 @@ See [`docs/UX.md`](docs/UX.md).
 - self-signed HTTPS option (`CHIMERA_TLS=true`)
 - admin health/state/scenario APIs, gated by a real login (default `admin`/`admin`, changeable)
 
+### Nutanix + Hyper-V personas — available
+
+Select with `"persona"` in config or `CHIMERA_PERSONA`. These serve protocol endpoints only (no Command Center yet):
+
+| Persona | Endpoint | Coverage |
+|---|---|---|
+| Nutanix Prism | `/api/nutanix/v3` | Basic auth, cluster identity, VM list/detail, power-state tasks, deterministic disk export |
+| Microsoft Hyper-V | `/wsman` | WS-Man Identify, Enumerate/Pull of `Msvm_ComputerSystem`, `RequestStateChange` |
+
+```bash
+CHIMERA_PERSONA=nutanix CHIMERA_USERNAME=admin CHIMERA_PASSWORD=secret go run ./cmd/chimera serve
+CHIMERA_PERSONA=hyperv CHIMERA_USERNAME=Administrator CHIMERA_PASSWORD=secret go run ./cmd/chimera serve
+```
+
 ### Persona roadmap
 
 | Persona | Status | Target compatibility |
 |---|---|---|
 | VMware vSphere | **Implemented** | SOAP / VIM / OVF / HTTP NFC |
-| Nutanix Prism | Planned | Prism Central / Element APIs |
+| Nutanix Prism | **Available** | Prism v3 auth / inventory / power / disk export |
+| Microsoft Hyper-V | **Available** | WS-Man Identify / Enumerate / Pull / power |
 | Proxmox VE | Planned | PVE REST API / tasks / storage |
 | OpenStack | Planned | Keystone / Nova / Glance / Cinder |
-| Microsoft Hyper-V | Planned | WinRM / WMI / virtualization management |
 | Cloud APIs | Planned | AWS/Azure-style discovery and export test surfaces |
 
-The future-provider contract is documented in [`docs/PROVIDER_ARCHITECTURE.md`](docs/PROVIDER_ARCHITECTURE.md).
+The provider contract and layout are documented in [`docs/PROVIDER_ARCHITECTURE.md`](docs/PROVIDER_ARCHITECTURE.md).
 
 ## Why this matches Transiva
 
@@ -200,6 +214,7 @@ CHIMERA_FIXTURE_VMDK_DIR=./fixtures ./bin/chimera serve -listen 0.0.0.0:8989
 
 | JSON | Environment | Default |
 |---|---|---:|
+| `persona` | `CHIMERA_PERSONA` | `vsphere` (`nutanix`, `hyperv`) |
 | `listen` | `CHIMERA_LISTEN` | `0.0.0.0:8989` |
 | `public_host` | `CHIMERA_PUBLIC_HOST` | listener address |
 | `tls` | `CHIMERA_TLS` | `false` |
@@ -330,14 +345,15 @@ Client / migration tool ---> +---------------------------+
 
 ```text
 cmd/chimera/             CLI: serve, selftest, print-config
-internal/config/         config + environment overrides
-internal/lab/            simulator lifecycle + TLS
+internal/config/         config + environment overrides (incl. persona)
+internal/lab/            simulator lifecycle + TLS + HTTP persona start
 internal/exportshim/     current vSphere OVF/ExportVm/NFC compatibility
 internal/fixture/        generated/real VMDK fixture registry
 internal/gateway/        public proxy, APIs, Range, faults and embedded UX
 internal/faults/         deterministic scenario state
+internal/personas/       nutanix (Prism v3) + hyperv (WS-Man) + shared store
 internal/selftest/       govmomi end-to-end probe
-integration/             compatibility tests
+integration/             vSphere + Nutanix/Hyper-V compatibility tests
 docs/                    UX, architecture, Transiva guide, test matrix
 scripts/                 config, scenario, smoke, deploy and packaging helpers
 systemd/                 systemd unit (used by packages and deploy-remote.sh)

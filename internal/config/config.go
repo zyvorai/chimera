@@ -14,6 +14,7 @@ import (
 )
 
 type Config struct {
+	Persona      string        `json:"persona"`
 	Listen       string        `json:"listen"`
 	PublicHost   string        `json:"public_host"`
 	TLS          bool          `json:"tls"`
@@ -45,6 +46,7 @@ type Config struct {
 
 func Default() Config {
 	return Config{
+		Persona:        "vsphere",
 		Listen:         "0.0.0.0:8989",
 		PublicHost:     "",
 		TLS:            false,
@@ -87,6 +89,11 @@ func Load(path string) (Config, error) {
 }
 
 func (c Config) Validate() error {
+	switch strings.ToLower(strings.TrimSpace(c.Persona)) {
+	case "vsphere", "nutanix", "hyperv":
+	default:
+		return fmt.Errorf("persona must be one of vsphere, nutanix, hyperv; got %q", c.Persona)
+	}
 	if strings.TrimSpace(c.Listen) == "" {
 		return errors.New("listen cannot be empty")
 	}
@@ -150,6 +157,7 @@ func applyEnv(c *Config) {
 			*dst = out
 		}
 	}
+	str("CHIMERA_PERSONA", &c.Persona)
 	str("CHIMERA_LISTEN", &c.Listen)
 	str("CHIMERA_PUBLIC_HOST", &c.PublicHost)
 	str("CHIMERA_USERNAME", &c.Username)

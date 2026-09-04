@@ -465,10 +465,10 @@ func (g *Gateway) serveAdmin(w http.ResponseWriter, r *http.Request) {
 func (g *Gateway) bootstrap() map[string]any {
 	providers := []map[string]any{
 		{"id": "vsphere", "name": "VMware vSphere", "short": "vSphere", "status": "active", "protocol": "SOAP / VIM / NFC", "accent": "violet"},
-		{"id": "nutanix", "name": "Nutanix Prism", "short": "Nutanix", "status": "planned", "protocol": "Prism v3/v4 API", "accent": "cyan"},
+		{"id": "nutanix", "name": "Nutanix Prism", "short": "Nutanix", "status": "available", "protocol": "Prism v3/v4 API", "accent": "cyan"},
 		{"id": "proxmox", "name": "Proxmox VE", "short": "Proxmox", "status": "planned", "protocol": "REST API", "accent": "orange"},
 		{"id": "openstack", "name": "OpenStack", "short": "OpenStack", "status": "planned", "protocol": "Nova / Glance", "accent": "rose"},
-		{"id": "hyperv", "name": "Microsoft Hyper-V", "short": "Hyper-V", "status": "planned", "protocol": "WinRM / WMI", "accent": "blue"},
+		{"id": "hyperv", "name": "Microsoft Hyper-V", "short": "Hyper-V", "status": "available", "protocol": "WinRM / WMI", "accent": "blue"},
 		{"id": "cloud", "name": "Cloud APIs", "short": "Cloud", "status": "planned", "protocol": "AWS / Azure style", "accent": "green"},
 	}
 	return map[string]any{

@@ -43,6 +43,10 @@ type Lab struct {
 }
 
 func Start(ctx context.Context, cfg config.Config) (*Lab, error) {
+	switch strings.ToLower(strings.TrimSpace(cfg.Persona)) {
+	case "nutanix", "hyperv":
+		return StartHTTPPersona(ctx, cfg)
+	}
 	model := simulator.VPX()
 	model.Datacenter = cfg.Datacenters
 	model.Cluster = cfg.Clusters
