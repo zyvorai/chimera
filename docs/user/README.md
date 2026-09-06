@@ -1,4 +1,4 @@
-# Chimera — Customer Documentation
+# Chimera — User Documentation
 
 **Chimera** is a programmable infrastructure simulation engine for integration-testing migration, discovery, export, and automation software **without** provisioning real vSphere, Nutanix, Hyper-V, AWS, or Azure.
 
@@ -18,12 +18,12 @@ The **Command Center** lives at `/__chimera/` on the same listener as the fake v
 ## Printable PDFs
 
 ```bash
-node scripts/customer-docs/build-customer-pdfs.mjs
+node scripts/user-docs/build-user-pdfs.mjs
 ```
 
 Output lands in [`pdf/`](pdf/):
 
-- `Chimera-Customer-README.pdf`
+- `Chimera-User-README.pdf`
 - `Chimera-Getting-Started.pdf`
 - `Chimera-Page-by-Page.pdf`
 - `Chimera-Admin-Basics.pdf`

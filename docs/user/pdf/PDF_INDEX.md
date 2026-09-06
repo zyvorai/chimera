@@ -1,10 +1,10 @@
-# Chimera customer PDFs
+# Chimera user PDFs
 
 Generated: 2026-09-04
 
-Rebuild: `node scripts/customer-docs/build-customer-pdfs.mjs`
+Rebuild: `node scripts/user-docs/build-user-pdfs.mjs`
 
-- `Chimera-Customer-README.pdf` — Customer Documentation Overview
+- `Chimera-User-README.pdf` — User Documentation Overview
 - `Chimera-Getting-Started.pdf` — Getting Started
 - `Chimera-Admin-Basics.pdf` — Admin Basics
 - `Chimera-Page-by-Page.pdf` — Page-by-Page Product Manual

@@ -4,7 +4,7 @@ Every primary navigable dashboard route.
 
 _Generated: 2026-09-04 · 10 routes_
 
-Regenerate: `node scripts/customer-docs/generate-page-index.mjs`
+Regenerate: `node scripts/user-docs/generate-page-index.mjs`
 
 ## AUTH
 
@@ -28,5 +28,5 @@ Regenerate: `node scripts/customer-docs/generate-page-index.mjs`
 
 ## Related
 
-- [Customer docs home](README.md)
+- [User docs home](README.md)
 - [Page-by-page guides](pages/README.md)
