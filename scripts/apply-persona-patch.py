@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright 2026 Zyvor AI Labs · https://zyvor.dev
+# SPDX-License-Identifier: Apache-2.0
 from pathlib import Path
 p=Path("internal/config/config.go")
 s=p.read_text()

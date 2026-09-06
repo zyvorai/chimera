@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# Copyright 2026 Zyvor AI Labs
+# Copyright 2026 Zyvor AI Labs · https://zyvor.dev
 # SPDX-License-Identifier: Apache-2.0
-# ============================================================================
 # package.sh — Build .deb and .rpm packages for chimera
 # ============================================================================
 # Chimera is a single static binary (CGO_ENABLED=0), so packaging is just:

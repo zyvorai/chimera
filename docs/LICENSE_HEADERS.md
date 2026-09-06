@@ -3,7 +3,7 @@
 Apache-2.0 — every Go source file, shell script, and Dockerfile includes:
 
 ```text
-Copyright 2026 Zyvor AI Labs
+Copyright 2026 Zyvor AI Labs · https://zyvor.dev
 SPDX-License-Identifier: Apache-2.0
 ```
 
