@@ -201,6 +201,8 @@ CHIMERA_FIXTURE_VMDK=/lab/fixtures/ubuntu-test.vmdk \
 
 Chimera never modifies the supplied fixture.
 
+**Under the systemd unit installed by `scripts/deploy-remote.sh`, the fixture path must live outside `/home` and `/root`.** The unit runs with `DynamicUser=yes` and `ProtectHome=yes`, which makes those trees invisible to the service regardless of file permissions — `chimera.service` will start fine but silently fall back to the generated fixture if `CHIMERA_FIXTURE_VMDK`/`_DIR` points under a user's home directory. Stage real fixtures somewhere like `/opt/chimera-fixtures/` instead, set `CHIMERA_FIXTURE_VMDK` in `/etc/chimera/chimera.env` to that path, and `systemctl restart chimera`.
+
 ### Directory of VMDKs, one per VM
 
 Point at a directory instead of a single file to give each simulated VM its own disk:
@@ -224,6 +226,8 @@ CHIMERA_FIXTURE_VMDK_DIR=./fixtures ./bin/chimera serve -listen 0.0.0.0:8989
 ```
 
 `scripts/verify-real-fixture.sh` proves the whole path end-to-end: it exports the assigned VM's disk through the real NFC download (not just `selftest`'s 4KB probe) and confirms `qemu-img info` recognizes the result as a valid disk image.
+
+For the full downstream chain — Chimera → `transiva-export` → h2kvm conversion → libvirt boot — see `../transiva/scripts/e2e-chimera-migrate-remote.sh`. It stages a real fixture (working around the `ProtectHome` restriction above), runs `chimera selftest`, exports the disk, and submits it to `transivad` as a normal migration job so h2kvmctl (not the script) owns conversion, `emit_domain_xml`, `virsh_define` and the post-boot check.
 
 ## Configuration
 
