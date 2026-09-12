@@ -14,6 +14,36 @@ Today, the vSphere persona is deliberately much deeper than a simple HTTP mock. 
 
 Chimera is a test and compatibility appliance. It is not VMware, Nutanix, Microsoft, Amazon, Red Hat, Proxmox or cloud-vendor software, and it is not intended to host production workloads.
 
+## Is this for you?
+
+Chimera is a small, open-source (Apache-2.0) **test double for infrastructure
+platform protocols** — it exists so migration/discovery/export/automation
+software can be integration-tested without a real vCenter, Nutanix cluster,
+Hyper-V host, AWS account, or Azure subscription. It is not a general HTTP
+mock framework and not a production infrastructure platform.
+
+| | **Chimera** | vcsim (govmomi's own vCenter simulator) | LocalStack (AWS) | WireMock / Testcontainers |
+|---|---|---|---|---|
+| Primary scope | Multi-platform infra persona simulation (vSphere deepest, plus Nutanix/Hyper-V/AWS/Azure) | vSphere/vCenter only | AWS service emulation only | Generic HTTP mocking / real service containers |
+| vSphere depth | Full govmomi session + inventory + `ExportVm`/`HttpNfcLease`/Range-206 VMDK download | Similar depth, vSphere-only (from the same govmomi project) | N/A | N/A — you'd hand-write the mock |
+| Multi-cloud/platform in one engine | Yes — one engine, five personas | No | No (AWS-only) | N/A (generic) |
+| License | Apache-2.0 | Apache-2.0 (part of govmomi) | Apache-2.0 (core) | Apache-2.0 |
+
+*(General characterizations as of writing — verify current features against
+each project's own docs. vcsim specifically is worth evaluating side by
+side if your integration testing is vSphere-only — Chimera's value is
+specifically the multi-persona breadth in one engine.)*
+
+**Persona depth, stated honestly**: only vSphere is deep today
+("implemented" per the README's roadmap table). Nutanix Prism v3, Hyper-V
+WS-Man, AWS EC2/EBS, and Azure ARM are "available" as **protocol surfaces
+only — no Command Center yet**. Proxmox VE and OpenStack remain on the
+roadmap, not started.
+
+New here? [`docs/FAQ.md`](docs/FAQ.md) covers licensing, support, and
+scope questions; [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)
+covers real issues with their fix.
+
 ## What is included
 
 ### Chimera Command Center UX
@@ -398,6 +428,11 @@ make run
 ```
 
 See [`docs/TEST_MATRIX.md`](docs/TEST_MATRIX.md) for the acceptance matrix.
+
+## FAQ & troubleshooting
+
+- [`docs/FAQ.md`](docs/FAQ.md) — licensing, support, scope questions
+- [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) — real issues, with the fix
 
 ## Contributing
 
