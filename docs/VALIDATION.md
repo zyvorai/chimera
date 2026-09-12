@@ -1,4 +1,8 @@
-# Validation
+---
+hero:
+  eyebrow: VALIDATION
+  title: Validation
+---
 
 Chimera targets **Go 1.25+** because the vSphere persona is pinned to `github.com/vmware/govmomi v0.56.0`. Nutanix, Hyper-V, AWS, and Azure personas use the Go standard library only (no extra module deps).
 

@@ -1,4 +1,8 @@
-# Source license headers
+---
+hero:
+  eyebrow: LICENSE HEADERS
+  title: Source license headers
+---
 
 Apache-2.0 — every Go source file, shell script, and Dockerfile includes:
 

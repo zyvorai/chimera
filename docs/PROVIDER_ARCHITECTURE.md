@@ -1,6 +1,16 @@
-# Chimera Provider Persona Architecture
-
-Chimera evolves around provider **personas**, not around one vCenter simulator. A persona is a protocol-compatible control-plane surface with its own authentication, inventory model, operations, export semantics and fault extensions.
+---
+hero:
+  eyebrow: PROVIDER ARCHITECTURE
+  title: Provider Persona Architecture
+  lead: >-
+    Chimera evolves around provider personas, not one vCenter simulator —
+    each is a protocol-compatible control-plane surface with its own
+    authentication, inventory model, operations, and export semantics.
+  highlights:
+    - {value: "5", label: "Personas with a package under internal/personas or internal/lab today"}
+    - {value: "1", label: "Persona wired to the Command Center gateway — vSphere"}
+    - {value: "2", label: "Personas planned next — Proxmox VE and OpenStack"}
+---
 
 ## Status today
 
@@ -15,38 +25,48 @@ Chimera evolves around provider **personas**, not around one vCenter simulator. 
 
 Select with `persona` in JSON config or `CHIMERA_PERSONA` (`vsphere` default). Shared VM/task/disk seed lives in `internal/personas/common`.
 
-### Nutanix coverage (Prism v3-compatible)
+## Take a closer look
 
-- Basic auth
-- Cluster identity
-- VM inventory list/detail
-- Power-state task creation + task lookup
-- Deterministic virtual-disk export bytes
+=== "Nutanix Prism"
 
-### Hyper-V coverage (WS-Man)
+    Prism v3-compatible coverage:
 
-- WS-Man Identify
-- Enumerate / Pull of `Msvm_ComputerSystem`
-- `RequestStateChange`
-- Deterministic VM inventory
+    - Basic auth
+    - Cluster identity
+    - VM inventory list/detail
+    - Power-state task creation + task lookup
+    - Deterministic virtual-disk export bytes
 
-### AWS coverage (EC2 + EBS)
+=== "Hyper-V"
 
-- SigV4 authentication (HMAC credential scope + payload hash)
-- `DescribeInstances`, `DescribeVolumes`, `StartInstances`, `StopInstances`
-- `CreateSnapshot`, `DescribeSnapshots`
-- EBS `ListSnapshotBlocks` / `GetSnapshotBlock` with checksum headers
+    WS-Man coverage:
 
-Details: [`AWS_AZURE_PERSONAS.md`](AWS_AZURE_PERSONAS.md).
+    - WS-Man Identify
+    - Enumerate / Pull of `Msvm_ComputerSystem`
+    - `RequestStateChange`
+    - Deterministic VM inventory
 
-### Azure coverage (ARM Compute + disks)
+=== "AWS"
 
-- Bearer token auth; subscription ID in path
-- VM list/get/instanceView; `start` / `powerOff` / `deallocate` / `restart`
-- Managed disk get + `beginGetAccess`
-- Azure-AsyncOperation polling; SAS-style Range disk download
+    EC2 + EBS coverage:
 
-Details: [`AWS_AZURE_PERSONAS.md`](AWS_AZURE_PERSONAS.md).
+    - SigV4 authentication (HMAC credential scope + payload hash)
+    - `DescribeInstances`, `DescribeVolumes`, `StartInstances`, `StopInstances`
+    - `CreateSnapshot`, `DescribeSnapshots`
+    - EBS `ListSnapshotBlocks` / `GetSnapshotBlock` with checksum headers
+
+    Details: [`AWS_AZURE_PERSONAS.md`](AWS_AZURE_PERSONAS.md).
+
+=== "Azure"
+
+    ARM Compute + disks coverage:
+
+    - Bearer token auth; subscription ID in path
+    - VM list/get/instanceView; `start` / `powerOff` / `deallocate` / `restart`
+    - Managed disk get + `beginGetAccess`
+    - Azure-AsyncOperation polling; SAS-style Range disk download
+
+    Details: [`AWS_AZURE_PERSONAS.md`](AWS_AZURE_PERSONAS.md).
 
 Next iteration (not yet): Nutanix v4, categories/projects/images, Hyper-V WMI association traversal, snapshots/checkpoints, VHDX byte-range export, SCVMM, deeper AWS/Azure control-plane fidelity, Proxmox/OpenStack personas.
 

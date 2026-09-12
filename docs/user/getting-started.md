@@ -1,4 +1,8 @@
-# Getting Started with Chimera
+---
+hero:
+  eyebrow: USER GUIDE
+  title: Getting Started with Chimera
+---
 
 ## What you need
 

@@ -1,4 +1,8 @@
-# Common workflows
+---
+hero:
+  eyebrow: USER GUIDE
+  title: Common workflows
+---
 
 End-to-end jobs mixing CLI and Command Center. Use `<host>` for any lab address — never hard-code deployment IPs in runbooks.
 

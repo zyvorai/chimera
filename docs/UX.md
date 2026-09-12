@@ -1,4 +1,8 @@
-# Chimera Command Center UX
+---
+hero:
+  eyebrow: UX
+  title: Chimera Command Center UX
+---
 
 The Command Center is embedded directly into the Go executable and served at:
 

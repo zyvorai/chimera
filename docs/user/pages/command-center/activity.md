@@ -1,4 +1,8 @@
-# Top Activity
+---
+hero:
+  eyebrow: USER GUIDE
+  title: Top Activity
+---
 
 ## Purpose
 

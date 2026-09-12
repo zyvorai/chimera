@@ -1,4 +1,8 @@
-# Login
+---
+hero:
+  eyebrow: USER GUIDE
+  title: Login
+---
 
 ## Purpose
 

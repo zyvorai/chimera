@@ -1,4 +1,8 @@
-# Transiva integration
+---
+hero:
+  eyebrow: TRANSIVA
+  title: Transiva integration
+---
 
 Chimera is aligned to Transiva's actual vSphere provider path:
 

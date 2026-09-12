@@ -1,4 +1,8 @@
-# Fault Studio
+---
+hero:
+  eyebrow: USER GUIDE
+  title: Fault Studio
+---
 
 ## Purpose
 

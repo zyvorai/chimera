@@ -1,4 +1,8 @@
-# VMDK Library
+---
+hero:
+  eyebrow: USER GUIDE
+  title: VMDK Library
+---
 
 ## Purpose
 

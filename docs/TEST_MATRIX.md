@@ -1,4 +1,8 @@
-# Chimera test matrix
+---
+hero:
+  eyebrow: TEST MATRIX
+  title: Chimera test matrix
+---
 
 Use this matrix as the acceptance suite for Chimera personas. Sections 1–74 focus on Transiva's vSphere provider; sections 75–87 cover Nutanix and Hyper-V; sections 88–98 cover AWS and Azure protocol personas.
 

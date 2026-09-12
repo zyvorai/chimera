@@ -1,4 +1,8 @@
-# Using the Dashboard
+---
+hero:
+  eyebrow: USER GUIDE
+  title: Using the Dashboard
+---
 
 Chimera's **Command Center** is a single-page infrastructure console embedded in the Go binary (`internal/gateway/ui.go`). There is no Node/React build step — open `/__chimera/` on the same listener as the vSphere SDK.
 

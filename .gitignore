@@ -14,3 +14,4 @@ transiva-chimera.yaml
 # MkDocs
 .venv-docs/
 /site/
+__pycache__/

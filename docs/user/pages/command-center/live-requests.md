@@ -1,4 +1,8 @@
-# Live requests
+---
+hero:
+  eyebrow: USER GUIDE
+  title: Live requests
+---
 
 ## Purpose
 

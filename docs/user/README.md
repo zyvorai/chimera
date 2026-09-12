@@ -1,4 +1,8 @@
-# Chimera — User Documentation
+---
+hero:
+  eyebrow: USER GUIDE
+  title: Chimera — User Documentation
+---
 
 **Chimera** is a programmable infrastructure simulation engine for integration-testing migration, discovery, export, and automation software **without** provisioning real vSphere, Nutanix, Hyper-V, AWS, or Azure.
 

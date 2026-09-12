@@ -1,4 +1,8 @@
-# AWS and Azure personas
+---
+hero:
+  eyebrow: AWS AZURE PERSONAS
+  title: AWS and Azure personas
+---
 
 This patch extends Chimera's built-in persona model with AWS EC2/EBS and Azure ARM Compute/Managed Disks.
 

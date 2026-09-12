@@ -1,4 +1,8 @@
-# VM inventory
+---
+hero:
+  eyebrow: USER GUIDE
+  title: VM inventory
+---
 
 ## Purpose
 

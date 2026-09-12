@@ -1,4 +1,8 @@
-# Chimera user PDFs
+---
+hero:
+  eyebrow: USER GUIDE
+  title: Chimera user PDFs
+---
 
 Generated: 2026-09-04
 

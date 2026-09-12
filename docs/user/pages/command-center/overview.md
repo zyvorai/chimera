@@ -1,4 +1,8 @@
-# Overview KPIs
+---
+hero:
+  eyebrow: USER GUIDE
+  title: Overview KPIs
+---
 
 ## Purpose
 

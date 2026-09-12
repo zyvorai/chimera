@@ -1,4 +1,8 @@
-# Scenario Launcher
+---
+hero:
+  eyebrow: USER GUIDE
+  title: Scenario Launcher
+---
 
 ## Purpose
 

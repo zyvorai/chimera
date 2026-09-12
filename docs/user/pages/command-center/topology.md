@@ -1,4 +1,8 @@
-# Topology
+---
+hero:
+  eyebrow: USER GUIDE
+  title: Topology
+---
 
 ## Purpose
 

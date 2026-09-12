@@ -1,4 +1,8 @@
-# Troubleshooting
+---
+hero:
+  eyebrow: TROUBLESHOOTING
+  title: Troubleshooting
+---
 
 Real issues, with the actual fix. If your symptom isn't here,
 [open an issue](https://github.com/zyvorai/chimera/issues).
