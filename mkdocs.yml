@@ -1,0 +1,74 @@
+site_name: Chimera
+site_description: A programmable infrastructure simulation engine for integration-testing migration, discovery, export, and automation software.
+site_url: https://zyvorai.github.io/chimera/
+repo_url: https://github.com/zyvorai/chimera
+repo_name: zyvorai/chimera
+edit_uri: edit/main/docs/
+docs_dir: docs
+site_dir: site
+theme:
+  name: material
+  logo: material/server-network
+  favicon: material/server-network
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep orange
+      accent: orange
+      toggle: {icon: material/brightness-7, name: Switch to dark mode}
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep orange
+      accent: orange
+      toggle: {icon: material/brightness-4, name: Switch to light mode}
+  features: [navigation.tabs, navigation.sections, navigation.top, navigation.footer, content.code.copy, search.suggest, search.highlight, toc.follow]
+plugins: [search]
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - {name: mermaid, class: mermaid, format: !!python/name:pymdownx.superfences.fence_code_format }
+  - pymdownx.tabbed: {alternate_style: true}
+  - pymdownx.tasklist: {custom_checkbox: true}
+  - tables
+  - toc: {permalink: true}
+nav:
+  - Home: index.md
+  - FAQ: FAQ.md
+  - Troubleshooting: TROUBLESHOOTING.md
+  - Architecture:
+      - Provider Architecture: PROVIDER_ARCHITECTURE.md
+      - AWS & Azure Personas: AWS_AZURE_PERSONAS.md
+      - Transiva Integration: TRANSIVA.md
+      - Command Center UX: UX.md
+  - Reference:
+      - Test Matrix: TEST_MATRIX.md
+      - Validation: VALIDATION.md
+      - Source License Headers: LICENSE_HEADERS.md
+  - User Guide:
+      - Overview: user/README.md
+      - Getting Started: user/getting-started.md
+      - Using the Dashboard: user/using-the-dashboard.md
+      - Admin Basics: user/admin-basics.md
+      - Workflows: user/workflows.md
+      - Complete Page Index: user/PAGE_INDEX.md
+      - Page-by-Page Guides:
+          - Overview: user/pages/README.md
+          - "Auth: Login": user/pages/auth/login.md
+          - "Command Center: Overview": user/pages/command-center/overview.md
+          - "Command Center: Login": user/pages/command-center/login.md
+          - "Command Center: Topology": user/pages/command-center/topology.md
+          - "Command Center: Activity": user/pages/command-center/activity.md
+          - "Command Center: Live Requests": user/pages/command-center/live-requests.md
+          - "Command Center: VM Inventory": user/pages/command-center/vm-inventory.md
+          - "Command Center: VMDK Library": user/pages/command-center/vmdk-library.md
+          - "Command Center: Scenario Launcher": user/pages/command-center/scenarios.md
+          - "Command Center: Fault Studio": user/pages/command-center/fault-studio.md
+          - "Command Center: Settings": user/pages/command-center/settings.md
+      - Printable PDFs: user/pdf/PDF_INDEX.md
+extra:
+  social:
+    - {icon: fontawesome/brands/github, link: https://github.com/zyvorai/chimera}

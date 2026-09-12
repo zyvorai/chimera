@@ -10,3 +10,7 @@ transiva-chimera.yaml
 .deploy-last
 
 .docs-tools/
+
+# MkDocs
+.venv-docs/
+/site/
