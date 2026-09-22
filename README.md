@@ -4,6 +4,12 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/zyvorai/chimera.svg)](https://pkg.go.dev/github.com/zyvorai/chimera)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
+![Chimera — infrastructure simulation for integration tests](docs/social/chimera-share-card.png)
+
+**Programmable infrastructure simulation for migration, export, and automation tests — without provisioning the real platform.**
+
+📖 **[Read the docs](https://zyvor.dev/docs/chimera)** — UX, provider architecture, Transiva recipes, and the test matrix.
+
 **Chimera** is a programmable infrastructure simulation engine for integration-testing migration, discovery, export and automation software without provisioning the real infrastructure platform.
 
 The architecture is provider-persona based: **vSphere is the deepest persona** (Command Center + govmomi), with **Nutanix Prism v3**, **Hyper-V WS-Man**, **AWS EC2/EBS**, and **Azure ARM** available as protocol surfaces. Proxmox VE and OpenStack remain on the roadmap.
@@ -13,6 +19,22 @@ The architecture is provider-persona based: **vSphere is the deepest persona** (
 Today, the vSphere persona is deliberately much deeper than a simple HTTP mock. A real govmomi client can authenticate with username/password, establish a session, traverse inventory, resolve VMs, create OVF descriptors, call `ExportVm`, wait on an `HttpNfcLease`, download a VMDK fixture, retry a broken transfer, and resume with HTTP Range/206 semantics.
 
 Chimera is a test and compatibility appliance. It is not VMware, Nutanix, Microsoft, Amazon, Red Hat, Proxmox or cloud-vendor software, and it is not intended to host production workloads.
+
+## Contents
+
+- [Is this for you?](#is-this-for-you)
+- [What is included](#what-is-included)
+- [Why this matches Transiva](#why-this-matches-transiva)
+- [Install](#install)
+- [Quick start](#quick-start)
+- [Docker](#docker)
+- [Use with Transiva](#use-with-transiva)
+- [Export fixture modes](#export-fixture-modes)
+- [Configuration](#configuration)
+- [Testing](#testing)
+- [FAQ & troubleshooting](#faq--troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Is this for you?
 
@@ -450,3 +472,5 @@ use at no charge, subject to Apache-2.0 (preserve notices / NOTICE where require
 
 Production support, SLAs, and Zyvor Enterprise products are licensed separately.
 Contact [sales@zyvor.dev](mailto:sales@zyvor.dev) or see [zyvor.dev](https://zyvor.dev).
+
+Social assets: [docs/social/](docs/social/).
