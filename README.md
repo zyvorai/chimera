@@ -7,7 +7,7 @@
 [![Book a demo](https://img.shields.io/badge/Book_a_demo-0071e3?style=for-the-badge)](https://zyvor.dev/schedule?utm_source=github&utm_medium=chimera&utm_campaign=readme_hero)
 [![30-day PoC](https://img.shields.io/badge/30--day_PoC-1d1d1f?style=for-the-badge)](https://zyvor.dev/poc?utm_source=github&utm_medium=chimera&utm_campaign=readme_hero)
 
-![Chimera — infrastructure simulation for integration tests](docs/social/chimera-share-card.png)
+![Chimera — infrastructure simulation for integration tests](docs/social/chimera-hero-dark.jpg)
 
 **Programmable infrastructure simulation for migration, export, and automation tests — without provisioning the real platform.**
 
