@@ -8,58 +8,47 @@
   Build: ./docs/social/build-hero-dark.sh  ->  chimera-hero-dark.jpg (2400x1260)
 -->
 <style>
-  :root { --blue:#0071e3; --signal:#2997ff; --cyan:#64d2ff; --green:#30d158; --amber:#ff9f0a;
+  :root { --blue:#0071e3; --signal:#2997ff; --cyan:#64d2ff; --green:#30d158; --amber:#ff9f0a; --red:#ff453a; --violet:#bf5af2;
     --sans:'SF Pro Display','Helvetica Neue',Helvetica,Arial,sans-serif; --mono:'SF Mono',Menlo,Consolas,monospace; }
   * { box-sizing:border-box; }
   html,body { margin:0; padding:0; }
   body { width:1200px; height:630px; overflow:hidden; color:#f5f5f7; font-family:var(--sans); position:relative; background:#000; }
   .aurora { position:absolute; inset:0;
-    background:radial-gradient(720px 460px at 80% 16%, rgba(41,151,255,.40), transparent 62%),
-               radial-gradient(600px 420px at 104% 98%, rgba(100,210,255,.20), transparent 60%),
+    background:radial-gradient(720px 460px at 80% 16%, rgba(41,151,255,.34), transparent 62%),
+               radial-gradient(600px 420px at 104% 98%, rgba(100,210,255,.16), transparent 60%),
                radial-gradient(520px 380px at 6% 110%, rgba(0,113,227,.28), transparent 60%); }
-  .grid { position:absolute; inset:0; opacity:.09;
-    background-image:linear-gradient(rgba(120,180,255,.9) 1px,transparent 1px),linear-gradient(90deg,rgba(120,180,255,.9) 1px,transparent 1px);
-    background-size:44px 44px; -webkit-mask-image:radial-gradient(900px 520px at 72% 42%, #000 18%, transparent 75%); }
-  .left { position:absolute; left:60px; top:52px; width:560px; z-index:3; }
+  .copy { position:absolute; left:60px; top:52px; width:560px; z-index:3; }
   .brand { display:flex; align-items:center; gap:12px; font-family:var(--mono); font-size:14px; letter-spacing:.18em; text-transform:uppercase; color:#a1a1a6; }
   .brand b { color:#fff; }
   .word { margin:20px 0 0; font-size:112px; line-height:.95; font-weight:800; letter-spacing:-.05em; white-space:nowrap;
     background:linear-gradient(92deg,#fff 0%,#e3f0ff 38%,var(--signal) 74%,var(--cyan) 100%); -webkit-background-clip:text; background-clip:text; color:transparent; padding-bottom:6px; }
   .tag { margin:14px 0 0; font-size:31px; line-height:1.15; font-weight:700; letter-spacing:-.02em; }
   .tag em { font-style:normal; color:var(--signal); }
-  .lede { margin:12px 0 0; font-size:18px; line-height:1.45; color:#b8b8bf; width:520px; }
+  .lede { margin:12px 0 0; font-size:18px; line-height:1.45; color:#b8b8bf; width:520px; text-shadow:0 1px 12px #000; }
   .stats { margin-top:24px; display:flex; gap:32px; }
   .stat b { display:block; font-size:34px; font-weight:800; letter-spacing:-.03em; color:#fff; }
   .stat span { font-family:var(--mono); font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:#8e8e93; }
   .pill { position:absolute; left:60px; bottom:40px; display:flex; gap:10px; z-index:3; }
-  .pill span { font-family:var(--mono); font-size:13.5px; font-weight:700; padding:7px 13px; border-radius:18px; border:1.5px solid rgba(255,255,255,.2); color:#e5e5ea; background:rgba(255,255,255,.04); }
+  .pill span { font-family:var(--mono); font-size:13.5px; font-weight:700; padding:7px 13px; border-radius:18px; border:1.5px solid rgba(255,255,255,.2); color:#e5e5ea; background:rgba(0,0,0,.6); }
   .pill span.b { background:var(--blue); border-color:var(--blue); color:#fff; box-shadow:0 0 24px rgba(0,113,227,.55); }
-
-  .right { position:absolute; left:652px; top:96px; width:560px; z-index:2; }
-  .win { position:relative; width:560px; border-radius:16px; overflow:hidden; z-index:2;
-    background:linear-gradient(180deg, rgba(22,24,30,.94), rgba(10,11,14,.96));
-    box-shadow:0 50px 100px rgba(0,0,0,.75), 0 0 0 1px rgba(255,255,255,.14), 0 0 90px rgba(41,151,255,.22);
-    transform:perspective(1600px) rotateY(-14deg) rotateX(4deg); transform-origin:left center; }
-  .bar { height:34px; display:flex; align-items:center; gap:8px; padding:0 14px; background:rgba(255,255,255,.05); border-bottom:1px solid rgba(255,255,255,.07); }
-  .bar i { width:11px; height:11px; border-radius:50%; background:#ff5f57; } .bar i:nth-child(2){background:#febc2e} .bar i:nth-child(3){background:#28c840}
-  .bar em { margin-left:auto; margin-right:auto; font-style:normal; font-family:var(--mono); font-size:12px; color:#8e8e93; transform:translateX(-24px); }
-  .term { min-height:214px; padding:20px 22px 24px; font-family:var(--mono); font-size:15.5px; line-height:1.75; }
-  .l { white-space:pre; overflow:hidden; text-overflow:ellipsis; color:#f5f5f7; }
-  .l .p { color:var(--signal); font-weight:700; }
-  .l.out { color:#a1a1a6; }
-  .l.cm { color:#6e6e73; }
-  .l.ok { color:#d1f7dc; } .l.ok span { color:var(--green); font-weight:700; }
-  .l.warn { color:#ffe1b0; } .l.warn span { color:var(--amber); font-weight:700; }
-  .cur { display:inline-block; width:9px; height:18px; background:var(--signal); vertical-align:-3px; box-shadow:0 0 12px var(--signal); }
-  .chips { margin:34px 0 0 38px; width:480px; display:flex; flex-wrap:wrap; gap:10px; position:relative; z-index:3; }
-  .chips span { font-family:var(--mono); font-size:13px; font-weight:700; letter-spacing:.04em; padding:7px 12px; border-radius:14px;
-    color:#cfe6ff; background:rgba(10,20,35,.82); border:1px solid rgba(41,151,255,.45); box-shadow:0 0 18px rgba(41,151,255,.18); }
+  .art { position:absolute; left:520px; top:0; width:680px; height:630px; z-index:2; }
+  .art svg { display:block; }
+  #labels { position:absolute; inset:0; z-index:4; pointer-events:none; }
+  .lbl { position:absolute; font-family:var(--mono); font-size:12.5px; color:#a1a1a6; text-align:center; transform:translate(-50%,-50%); white-space:nowrap; }
+  .lbl b { display:block; font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:#e5e5ea; }
+  .lbl span { display:block; margin-top:3px; }
+  .lbl.box { padding:7px 12px; border-radius:12px; background:rgba(8,10,14,.85); border:1px solid rgba(255,255,255,.14); }
+  .lbl.chip { padding:6px 11px; border-radius:13px; font-size:12.5px; font-weight:700; color:#cfe6ff; background:rgba(10,20,35,.85); border:1px solid rgba(41,151,255,.5); box-shadow:0 0 16px rgba(41,151,255,.2); }
+  .lbl.left { transform:translate(0,-50%); text-align:left; }
+  .lbl.right { transform:translate(-100%,-50%); text-align:right; }
+  .ok { color:var(--green) !important; } .warn { color:var(--amber) !important; } .bad { color:var(--red) !important; } .sig { color:var(--signal) !important; } .cy { color:var(--cyan) !important; } .vi { color:var(--violet) !important; }
 </style>
 </head>
 <body>
 <div class="aurora"></div>
-<div class="grid"></div>
-<div class="left">
+<div class="art"><svg id="art" width="680" height="630" viewBox="0 0 680 630" xmlns="http://www.w3.org/2000/svg"></svg></div>
+<div id="labels"></div>
+<div class="copy">
   <div class="brand"><svg viewBox="0 0 64 64" width="30" height="30" aria-hidden="true"><defs><linearGradient id="zb" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ff5a15"/><stop offset="1" stop-color="#cc420a"/></linearGradient></defs><rect width="64" height="64" rx="15" fill="url(#zb)"/><path d="M18.5,20.5 45.5,20.5 18.5,43.5 45.5,43.5" fill="none" stroke="#fff" stroke-width="8.3" stroke-linecap="round" stroke-linejoin="round"/></svg><b>Zyvor</b><span>&middot;</span><span>Infrastructure simulation engine</span></div>
   <div class="word">Chimera</div>
   <div class="tag">Test against vCenter.<br><em>Without a vCenter.</em></div>
@@ -67,8 +56,108 @@
   <div class="stats"><div class="stat"><b>5</b><span>personas</span></div><div class="stat"><b>4</b><span>fault scenarios</span></div><div class="stat"><b>206</b><span>Range resume</span></div></div>
 </div>
 <div class="pill"><span class="b">github.com/zyvorai/chimera</span><span>Apache-2.0</span></div>
-<div class="right"><div class="win"><div class="bar"><i></i><i></i><i></i><em>chimera</em></div>
-<div class="term"><div class="l"><span class="p">$</span> ./bin/chimera serve -config config.example.json</div><div class="l ok"><span>&#10003;</span> Chimera ready</div><div class="l out">  endpoint: http://localhost:8989/sdk</div><div class="l out">  admin:    http://localhost:8989/__chimera/</div><div class="l out">  sample VM path: /DC0/vm/DC0_C0_RP0_VM0</div><div class="l warn"><span>!</span>   Using default admin credentials (admin/admin)</div><div class="l"><span class="p">$</span> <i class="cur"></i></div></div></div>
-<div class="chips"><span>Go</span><span>govmomi</span><span>vSphere SOAP</span><span>AWS SigV4</span><span>Azure ARM</span></div></div>
+<script>
+var Z = (function () {
+  var NS = 'http://www.w3.org/2000/svg', svg = document.getElementById('art'), labels = document.getElementById('labels');
+  var seed = 20261004;
+  function rnd() { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; }
+  function el(tag, a, parent) { var n = document.createElementNS(NS, tag); for (var k in a) n.setAttribute(k, a[k]); (parent || svg).appendChild(n); return n; }
+  function g(attrs) { return el('g', attrs || {}); }
+  function label(x, y, inner, cls, style) { var d = document.createElement('div'); d.className = 'lbl ' + (cls || ''); d.style.left = (520 + x) + 'px'; d.style.top = y + 'px'; if (style) d.setAttribute('style', d.getAttribute('style') + ';' + style); d.innerHTML = inner; labels.appendChild(d); return d; }
+  return { NS: NS, svg: svg, W: 680, H: 630, rnd: rnd, el: el, g: g, label: label,
+    reseed: function (s) { seed = s; },
+    c: { blue: '#0071e3', signal: '#2997ff', cyan: '#64d2ff', green: '#30d158', amber: '#ff9f0a', red: '#ff453a', violet: '#bf5af2', teal: '#40c8e0', indigo: '#5e5ce6', pink: '#ff375f', white: '#f5f5f7', grey: '#8e8e93' } };
+})();
+(function () {
+// Chimera: kaleidoscope mandala. Five protocol personas (vSphere, Nutanix, Hyper-V, AWS, Azure) are
+// translucent pentagons and petals, fused by mirror symmetry into one simulated core.
+var C = Z.c, cx = 392, cy = 296;
+var defs = Z.el('defs', {});
+var personas = [
+  { n: 'vSphere', s: 'SOAP &middot; deepest', col: '#2997ff' },
+  { n: 'Nutanix', s: 'Prism v3', col: '#40c8e0' },
+  { n: 'AWS', s: 'EC2/EBS &middot; SigV4', col: '#64d2ff' },
+  { n: 'Azure', s: 'ARM', col: '#5e5ce6' },
+  { n: 'Hyper-V', s: 'WS-Man', col: '#bf5af2' }
+];
+var dh = '<filter id="chGl" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
+  '<filter id="chSf" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="16"/></filter>' +
+  '<radialGradient id="chCore"><stop offset="0" stop-color="#fff"/><stop offset=".4" stop-color="#64d2ff"/><stop offset="1" stop-color="#0071e3" stop-opacity="0"/></radialGradient>';
+personas.forEach(function (p, k) {
+  dh += '<linearGradient id="chP' + k + '" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="' + p.col + '" stop-opacity=".05"/><stop offset=".7" stop-color="' + p.col + '" stop-opacity=".55"/><stop offset="1" stop-color="#ffffff" stop-opacity=".9"/></linearGradient>';
+});
+defs.innerHTML = dh;
+
+function pol(r, a) { return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; }
+function pts(a) { return a.map(function (q) { return q[0].toFixed(1) + ',' + q[1].toFixed(1); }).join(' '); }
+
+// mandala texture: 40 radial hairlines and rings
+Z.el('circle', { cx: cx, cy: cy, r: 230, fill: '#0a2a50', opacity: .45, filter: 'url(#chSf)' });
+for (var i = 0; i < 40; i++) {
+  var a = i / 40 * Math.PI * 2, p0 = pol(46, a), p1 = pol(i % 2 ? 196 : 214, a);
+  Z.el('line', { x1: p0[0], y1: p0[1], x2: p1[0], y2: p1[1], stroke: 'rgba(120,185,255,.09)' });
+}
+[70, 128, 178, 214].forEach(function (r, i) {
+  Z.el('circle', { cx: cx, cy: cy, r: r, fill: 'none', stroke: 'rgba(120,185,255,' + (i === 3 ? .22 : .12) + ')', 'stroke-dasharray': i % 2 ? '1 5' : 'none' });
+});
+
+// rotated translucent pentagons, one per persona, offset by 72/5 degrees -> 25-fold rosette
+var blend = Z.g({ style: 'isolation:isolate' });
+personas.forEach(function (p, k) {
+  var a0 = -Math.PI / 2 + k * Math.PI * 2 / 25, ring = [], inner = [];
+  for (var j = 0; j < 5; j++) { ring.push(pol(152, a0 + j * Math.PI * 2 / 5)); inner.push(pol(96, a0 + Math.PI / 5 + j * Math.PI * 2 / 5)); }
+  Z.el('polygon', { points: pts(ring), fill: p.col, 'fill-opacity': .06, stroke: p.col, 'stroke-width': 1.1, 'stroke-opacity': .6, style: 'mix-blend-mode:screen' }, blend);
+  Z.el('polygon', { points: pts(inner), fill: 'none', stroke: p.col, 'stroke-width': .8, 'stroke-opacity': .4 }, blend);
+});
+// secondary inverted petals between the main ones
+for (var k = 0; k < 5; k++) {
+  var a = -Math.PI / 2 + (k + 0.5) * Math.PI * 2 / 5, deg = a * 180 / Math.PI;
+  var gp = Z.g({ transform: 'translate(' + cx + ',' + cy + ') rotate(' + deg.toFixed(2) + ')' }, blend);
+  Z.el('polygon', { points: '60,0 104,-20 142,0 104,20', fill: 'rgba(100,210,255,.08)', stroke: 'rgba(100,210,255,.45)', 'stroke-width': .8, style: 'mix-blend-mode:screen' }, gp);
+}
+
+// five petals (mirror-symmetric kites) pointing to each persona
+personas.forEach(function (p, k) {
+  var a = -Math.PI / 2 + k * Math.PI * 2 / 5, deg = a * 180 / Math.PI;
+  var len = k === 0 ? 200 : 180, g = Z.g({ transform: 'translate(' + cx + ',' + cy + ') rotate(' + deg.toFixed(2) + ')', style: 'mix-blend-mode:screen' }, blend);
+  Z.el('polygon', { points: '0,0 ' + (len * .55) + ',' + (-34) + ' ' + len + ',0 ' + (len * .55) + ',34', fill: 'url(#chP' + k + ')', stroke: p.col, 'stroke-width': 1, 'stroke-opacity': .7 }, g);
+  Z.el('polygon', { points: (len * .3) + ',0 ' + (len * .6) + ',-14 ' + (len * .88) + ',0 ' + (len * .6) + ',14', fill: 'none', stroke: '#fff', 'stroke-width': .8, opacity: .45 }, g);
+  Z.el('line', { x1: 0, y1: 0, x2: len, y2: 0, stroke: '#fff', 'stroke-width': .6, opacity: .35 }, g);
+  Z.el('circle', { cx: len, cy: 0, r: 4, fill: '#fff', filter: 'url(#chGl)' }, g);
+  // mirrored shards between petals
+  var g2 = Z.g({ transform: 'translate(' + cx + ',' + cy + ') rotate(' + (deg + 36).toFixed(2) + ')' });
+  [1, -1].forEach(function (m) {
+    Z.el('polygon', { points: '96,' + (m * 4) + ' 128,' + (m * 20) + ' 150,' + (m * 6), fill: p.col, opacity: .22 }, g2);
+  });
+  Z.el('circle', { cx: 168, cy: 0, r: 2, fill: p.col, opacity: .8 }, g2);
+});
+
+// inner star of mirrored diamonds
+for (var i = 0; i < 20; i++) {
+  var a = i / 20 * Math.PI * 2, deg = a * 180 / Math.PI;
+  var g3 = Z.g({ transform: 'translate(' + cx + ',' + cy + ') rotate(' + deg.toFixed(2) + ')' });
+  Z.el('polygon', { points: '54,0 64,-4 76,0 64,4', fill: i % 2 ? '#64d2ff' : '#bf5af2', opacity: .55 }, g3);
+}
+
+// fused core: decagon
+Z.el('circle', { cx: cx, cy: cy, r: 60, fill: 'url(#chCore)', opacity: .5, filter: 'url(#chSf)' });
+var dec = [];
+for (var j = 0; j < 10; j++) dec.push(pol(44, -Math.PI / 2 + j * Math.PI / 5));
+Z.el('polygon', { points: pts(dec), fill: 'rgba(6,10,18,.94)', stroke: '#cfe6ff', 'stroke-width': 1.6, filter: 'url(#chGl)' });
+var dec2 = [];
+for (var j = 0; j < 5; j++) dec2.push(pol(36, -Math.PI / 2 + j * Math.PI * 4 / 5));
+Z.el('polygon', { points: pts(dec2), fill: 'none', stroke: 'rgba(100,210,255,.35)', 'stroke-width': 1 });
+Z.label(cx, cy, '<b>one</b><span>engine</span>');
+
+// persona labels at petal tips
+personas.forEach(function (p, k) {
+  var a = -Math.PI / 2 + k * Math.PI * 2 / 5, r = k === 0 ? 228 : 210, q = pol(r, a);
+  var dx = Math.cos(a), cls = Math.abs(dx) < 0.3 ? '' : (dx > 0 ? 'left' : 'right');
+  var ox = Math.abs(dx) < 0.3 ? 0 : (dx > 0 ? 4 : -4);
+  Z.label(q[0] + ox, q[1] + (Math.sin(a) > 0.5 ? 10 : 0), '<b style="color:' + p.col + '">' + p.n + '</b><span>' + p.s + '</span>', cls);
+});
+Z.label(400, 584, 'govmomi &middot; fault scenarios &middot; Range 206', 'chip');
+})();
+</script>
 </body>
 </html>
