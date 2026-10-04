@@ -1,17 +1,27 @@
+<div align="center">
+
 # Chimera
 
 [![CI](https://github.com/zyvorai/chimera/actions/workflows/ci.yml/badge.svg)](https://github.com/zyvorai/chimera/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/zyvorai/chimera.svg)](https://pkg.go.dev/github.com/zyvorai/chimera)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![Go](https://img.shields.io/badge/Go-1.25%2B-00ADD8?logo=go&logoColor=white)](go.mod)
 
 [![Book a demo](https://img.shields.io/badge/Book_a_demo-0071e3?style=for-the-badge)](https://zyvor.dev/schedule?utm_source=github&utm_medium=chimera&utm_campaign=readme_hero)
-[![30-day PoC](https://img.shields.io/badge/30--day_PoC-1d1d1f?style=for-the-badge)](https://zyvor.dev/poc?utm_source=github&utm_medium=chimera&utm_campaign=readme_hero)
+[![30-day PoC](https://img.shields.io/badge/30--day_PoC-000000?style=for-the-badge)](https://zyvor.dev/poc?utm_source=github&utm_medium=chimera&utm_campaign=readme_hero)
+[![Quickstart](https://img.shields.io/badge/Quickstart_one_Go_binary-0a84ff?style=for-the-badge)](#quickstart)
 
 ![Chimera — infrastructure simulation for integration tests](docs/social/chimera-hero-dark.jpg)
 
-**Programmable infrastructure simulation for migration, export, and automation tests — without provisioning the real platform.**
+### Test against vCenter. Without a vCenter.
+
+**Programmable infrastructure simulation for migration, export, and automation tests — without provisioning the real platform.** A real govmomi client can log in, walk inventory, call `ExportVm`, wait on an `HttpNfcLease` and resume a broken VMDK download with HTTP Range/206, with Nutanix, Hyper-V, AWS and Azure protocol personas in the same engine.
+
+**5 provider personas** · **Real govmomi export path** · **Range/206 resume** · **Deterministic fault scenarios** · **Apache-2.0, single Go binary**
 
 📖 **[Read the docs](https://zyvor.dev/docs/chimera?utm_source=github&utm_medium=chimera&utm_campaign=readme_suite)** — UX, provider architecture, Transiva recipes, and the test matrix.
+
+</div>
 
 **Chimera** is a programmable infrastructure simulation engine for integration-testing migration, discovery, export and automation software without provisioning the real infrastructure platform.
 
@@ -23,23 +33,53 @@ Today, the vSphere persona is deliberately much deeper than a simple HTTP mock. 
 
 Chimera is a test and compatibility appliance. It is not VMware, Nutanix, Microsoft, Amazon, Red Hat, Proxmox or cloud-vendor software, and it is not intended to host production workloads.
 
-## Contents
+---
 
-- [Is this for you?](#is-this-for-you)
-- [What is included](#what-is-included)
-- [Why this matches Transiva](#why-this-matches-transiva)
-- [Install](#install)
-- [Quick start](#quick-start)
-- [Docker](#docker)
-- [Use with Transiva](#use-with-transiva)
-- [Export fixture modes](#export-fixture-modes)
-- [Configuration](#configuration)
-- [Testing](#testing)
-- [FAQ & troubleshooting](#faq--troubleshooting)
-- [Contributing](#contributing)
-- [License](#license)
+## What's new
 
-## Is this for you?
+| | |
+|---|---|
+| **AWS persona** | EC2 Describe/Start/Stop, volumes, CreateSnapshot; EBS List/GetSnapshotBlock, SigV4 auth |
+| **Azure persona** | ARM VM list/get/instanceView/start/powerOff; managed disk beginGetAccess + Range SAS, Bearer auth |
+| **Nutanix Prism v3 persona** | Basic auth, cluster identity, VM list/detail, power-state tasks, deterministic disk export |
+| **Hyper-V WS-Man persona** | Identify, Enumerate/Pull of `Msvm_ComputerSystem`, `RequestStateChange` |
+| **Command Center redesign** | Multi-page dashboard with persona navigation, Fault Studio and the VMDK Library |
+
+---
+
+## Why Chimera
+
+| When this happens… | Chimera gives you… |
+|---|---|
+| Your migration tool's integration tests need a vCenter nobody wants to license or maintain | A vSphere SOAP/VIM endpoint at `/sdk` that govmomi clients log into, inventory and export from |
+| The export code path (OVF, `ExportVm`, `HttpNfcLease`, NFC) is never exercised before production | The exact boundaries implemented, with a generated or real VMDK fixture behind the NFC download |
+| Retry and resume logic is only tested when a real transfer happens to break | Deterministic connection drops, 4xx/5xx faults, latency, bandwidth caps and a `resume` scenario that aborts after 2 MiB |
+| You support more than vSphere | Nutanix Prism v3, Hyper-V WS-Man, AWS EC2/EBS and Azure ARM personas in the same engine |
+| Downstream conversion needs a disk that actually boots | Real VMDK fixtures per VM, browser upload, and `make fixtures` for a checksummed Alpine cloud image |
+| CI must drive the scenarios without a person in the loop | Admin APIs for faults, scenarios and resets, plus `chimera selftest` |
+
+![Capabilities at a glance: vSphere, Personas, Faults, Fixtures](docs/ux/readme-capabilities.jpg)
+
+---
+
+## Chimera vs vcsim
+
+![Chimera vs vcsim: built on govmomi's simulator, ready for export tests](docs/ux/readme-vs.jpg)
+
+Chimera's vSphere persona embeds govmomi's simulator — the same project as vcsim — and builds the test appliance around it.
+
+| | **Chimera** | **vcsim** (govmomi's vCenter simulator) |
+|---|---|---|
+| Form | Test appliance: one binary, `.deb`/`.rpm`, Docker, systemd unit | Go library plus a `vcsim` binary |
+| Platforms | vSphere, plus Nutanix Prism v3, Hyper-V WS-Man, AWS EC2/EBS, Azure ARM | vSphere / vCenter |
+| vSphere API | govmomi simulator, plus the OVF / `ExportVm` / `HttpNfcLease` / NFC shim | govmomi simulator |
+| Fault injection | Fault Studio and admin API: latency, status codes, NFC failures, stream drops, bandwidth caps | Custom Go method handlers |
+| Disk content | Generated stream or real VMDK per VM, browser upload, recursive directory scan | — |
+| Dashboard | Embedded Command Center at `/__chimera/` | — |
+| License | Apache-2.0 | Apache-2.0 (part of govmomi) |
+| **Choose vcsim when** | | Your tests are vSphere-only and you want a Go library inside your test process rather than an appliance |
+
+### Is this for you?
 
 Chimera is a small, open-source (Apache-2.0) **test double for infrastructure
 platform protocols** — it exists so migration/discovery/export/automation
@@ -59,15 +99,143 @@ each project's own docs. vcsim specifically is worth evaluating side by
 side if your integration testing is vSphere-only — Chimera's value is
 specifically the multi-persona breadth in one engine.)*
 
-**Persona depth, stated honestly**: only vSphere is deep today
-("implemented" per the README's roadmap table). Nutanix Prism v3, Hyper-V
-WS-Man, AWS EC2/EBS, and Azure ARM are "available" as **protocol surfaces
-only — no Command Center yet**. Proxmox VE and OpenStack remain on the
-roadmap, not started.
-
 New here? [`docs/FAQ.md`](docs/FAQ.md) covers licensing, support, and
 scope questions; [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)
 covers real issues with their fix.
+
+---
+
+## How it fits together
+
+![Your client talks to Chimera; it thinks it's vCenter](docs/ux/readme-how-it-works.jpg)
+
+```text
+                  +------------------------------------+
+                  |       Chimera Command Center       |
+                  | personas · inventory · faults · UI |
+                  +------------------+-----------------+
+                                     |
+                              /__chimera APIs
+                                     |
+                                     v
+Client / migration tool ---> +---------------------------+
+                             | Chimera public gateway    |
+                             | auth path · URL rewrite   |
+                             | Range/206 · faults · bw   |
+                             +-------------+-------------+
+                                           |
+                         +-----------------+-----------------+
+                         |                                   |
+                         v                                   v
+              +---------------------+             +--------------------+
+              | vSphere persona     |             | HTTP personas      |
+              | govmomi simulator   |             | Nutanix · Hyper-V  |
+              | SOAP/VIM inventory  |             | AWS · Azure        |
+              +----------+----------+             +--------------------+
+                         |                                   ^
+                         v                                   |
+              +---------------------+             +--------------------+
+              | export compatibility|             | planned: PVE /     |
+              | OVF · ExportVm · NFC|             | OpenStack          |
+              +----------+----------+             +--------------------+
+                         |
+                         v
+                    fixture store
+```
+
+The provider contract and layout are documented in [`docs/PROVIDER_ARCHITECTURE.md`](docs/PROVIDER_ARCHITECTURE.md).
+
+### Project layout
+
+```text
+cmd/chimera/             CLI: serve, selftest, print-config
+internal/config/         config + environment overrides (incl. persona)
+internal/lab/            simulator lifecycle + TLS + HTTP persona start
+internal/exportshim/     current vSphere OVF/ExportVm/NFC compatibility
+internal/fixture/        generated/real VMDK fixture registry
+internal/gateway/        public proxy, APIs, Range, faults and embedded UX
+internal/faults/         deterministic scenario state
+internal/personas/       nutanix, hyperv, aws, azure + shared store
+internal/selftest/       govmomi end-to-end probe
+integration/             vSphere + Nutanix/Hyper-V + AWS/Azure compatibility tests
+docs/                    UX, architecture, Transiva guide, test matrix
+scripts/                 config, scenario, smoke, deploy and packaging helpers
+systemd/                 systemd unit (used by packages and deploy-remote.sh)
+packaging/               nfpm config for .deb/.rpm builds
+.github/workflows/       CI + tagged-release packaging
+```
+
+---
+
+## Quickstart
+
+Requirements: Go 1.25+.
+
+```bash
+go mod tidy
+go build -o bin/chimera ./cmd/chimera
+./bin/chimera serve -config config.example.json
+```
+
+Expected output:
+
+```text
+Chimera ready
+  endpoint: http://localhost:8989/sdk
+  username: administrator@vsphere.local
+  password: vmware
+  admin:    http://localhost:8989/__chimera/
+  login:    admin / admin
+  token:    chimera-admin
+  sample VM path: /DC0/vm/DC0_C0_RP0_VM0
+  ⚠ Using default admin credentials (admin/admin), reachable on all interfaces by default —
+    set CHIMERA_ADMIN_USERNAME/CHIMERA_ADMIN_PASSWORD (or change it in the dashboard's Settings) to change them.
+```
+
+Open the Command Center — `/` also redirects here:
+
+```text
+http://localhost:8989/__chimera/
+```
+
+The browser dashboard itself is a full-page login gate — nothing renders until you log in with `admin`/`admin` (printed at startup, changeable from the dashboard's Settings panel or `CHIMERA_ADMIN_USERNAME`/`CHIMERA_ADMIN_PASSWORD`). That's a frontend-only gate, though: the underlying read APIs (health, bootstrap, inventory, telemetry, VMDK list) stay public in the disposable lab regardless, so scripts/CI can still poll them directly without a token. Chimera listens on `0.0.0.0` by default, so change the admin login before exposing an instance beyond your own machine.
+
+Run the end-to-end client probe:
+
+```bash
+./bin/chimera selftest \
+  -url http://localhost:8989/sdk \
+  -user administrator@vsphere.local \
+  -pass vmware
+```
+
+The self-test performs login → datacenter discovery → VM inventory → `ExportVm` → lease wait → NFC read → lease complete. By default it only reads the first 4KB; pass `-vm <name>` to target a specific VM and `-save <path>` to download the complete disk instead (see `scripts/verify-real-fixture.sh` for a full worked example against a real fixture).
+
+### Install
+
+**Prebuilt packages** (Linux amd64/arm64): grab the `.deb` or `.rpm` from the [latest release](https://github.com/zyvorai/chimera/releases/latest), then:
+
+```bash
+sudo apt install ./chimera_*.deb   # Debian/Ubuntu
+sudo dnf install ./chimera-*.rpm   # Fedora/RHEL/Alma
+sudo systemctl enable --now chimera
+```
+
+This installs the binary to `/usr/bin/chimera`, a systemd unit (`systemd/chimera.service`), and an env file at `/etc/chimera/chimera.env`. Logs go to the journal (`journalctl -u chimera` or `-t chimera`).
+
+**Remote host, from source**: `./scripts/deploy-remote.sh <host> [user]` cross-compiles and installs Chimera as a systemd service over SSH — no Go toolchain needed on the target. See `--help` for options.
+
+**Build packages yourself**: `make package` (needs [nfpm](https://nfpm.goreleaser.com)) builds `.deb`/`.rpm` into `dist/` from `packaging/nfpm.yaml`.
+
+### Docker
+
+```bash
+docker compose up --build
+```
+
+If the client is in another container or host, set `CHIMERA_PUBLIC_HOST` to an address reachable **from the client**. Export lease URLs embed this value.
+
+---
 
 ## What is included
 
@@ -139,91 +307,9 @@ CHIMERA_PERSONA=aws CHIMERA_USERNAME=AKIDCHIMERA CHIMERA_PASSWORD=chimera-secret
 CHIMERA_PERSONA=azure CHIMERA_USERNAME=11111111-2222-3333-4444-555555555555 CHIMERA_PASSWORD=chimera-azure-token go run ./cmd/chimera serve
 ```
 
-### Persona roadmap
-
-| Persona | Status | Target compatibility |
-|---|---|---|
-| VMware vSphere | **Implemented** | SOAP / VIM / OVF / HTTP NFC |
-| Nutanix Prism | **Available** | Prism v3 auth / inventory / power / disk export |
-| Microsoft Hyper-V | **Available** | WS-Man Identify / Enumerate / Pull / power |
-| Amazon Web Services | **Available** | EC2 Query + EBS snapshot blocks (SigV4) |
-| Microsoft Azure | **Available** | ARM Compute + managed disk SAS (Bearer) |
-| Proxmox VE | Planned | PVE REST API / tasks / storage |
-| OpenStack | Planned | Keystone / Nova / Glance / Cinder |
-
-The provider contract and layout are documented in [`docs/PROVIDER_ARCHITECTURE.md`](docs/PROVIDER_ARCHITECTURE.md).
-
 ## Why this matches Transiva
 
 Transiva's vSphere provider uses govmomi for normal login and inventory. Its export flow creates an OVF descriptor, calls `vm.Export()`, waits for the lease, and downloads each lease item. When a partial local file exists, Transiva sends `Range: bytes=N-`. Chimera implements those exact boundaries so Transiva can exercise its production code path without requiring a physical vCenter.
-
-## Install
-
-**Prebuilt packages** (Linux amd64/arm64): grab the `.deb` or `.rpm` from the [latest release](https://github.com/zyvorai/chimera/releases/latest), then:
-
-```bash
-sudo apt install ./chimera_*.deb   # Debian/Ubuntu
-sudo dnf install ./chimera-*.rpm   # Fedora/RHEL/Alma
-sudo systemctl enable --now chimera
-```
-
-This installs the binary to `/usr/bin/chimera`, a systemd unit (`systemd/chimera.service`), and an env file at `/etc/chimera/chimera.env`. Logs go to the journal (`journalctl -u chimera` or `-t chimera`).
-
-**Remote host, from source**: `./scripts/deploy-remote.sh <host> [user]` cross-compiles and installs Chimera as a systemd service over SSH — no Go toolchain needed on the target. See `--help` for options.
-
-**Build packages yourself**: `make package` (needs [nfpm](https://nfpm.goreleaser.com)) builds `.deb`/`.rpm` into `dist/` from `packaging/nfpm.yaml`.
-
-## Quick start
-
-Requirements: Go 1.25+.
-
-```bash
-go mod tidy
-go build -o bin/chimera ./cmd/chimera
-./bin/chimera serve -config config.example.json
-```
-
-Expected output:
-
-```text
-Chimera ready
-  endpoint: http://localhost:8989/sdk
-  username: administrator@vsphere.local
-  password: vmware
-  admin:    http://localhost:8989/__chimera/
-  login:    admin / admin
-  token:    chimera-admin
-  sample VM path: /DC0/vm/DC0_C0_RP0_VM0
-  ⚠ Using default admin credentials (admin/admin), reachable on all interfaces by default —
-    set CHIMERA_ADMIN_USERNAME/CHIMERA_ADMIN_PASSWORD (or change it in the dashboard's Settings) to change them.
-```
-
-Open the Command Center — `/` also redirects here:
-
-```text
-http://localhost:8989/__chimera/
-```
-
-The browser dashboard itself is a full-page login gate — nothing renders until you log in with `admin`/`admin` (printed at startup, changeable from the dashboard's Settings panel or `CHIMERA_ADMIN_USERNAME`/`CHIMERA_ADMIN_PASSWORD`). That's a frontend-only gate, though: the underlying read APIs (health, bootstrap, inventory, telemetry, VMDK list) stay public in the disposable lab regardless, so scripts/CI can still poll them directly without a token. Chimera listens on `0.0.0.0` by default, so change the admin login before exposing an instance beyond your own machine.
-
-Run the end-to-end client probe:
-
-```bash
-./bin/chimera selftest \
-  -url http://localhost:8989/sdk \
-  -user administrator@vsphere.local \
-  -pass vmware
-```
-
-The self-test performs login → datacenter discovery → VM inventory → `ExportVm` → lease wait → NFC read → lease complete. By default it only reads the first 4KB; pass `-vm <name>` to target a specific VM and `-save <path>` to download the complete disk instead (see `scripts/verify-real-fixture.sh` for a full worked example against a real fixture).
-
-## Docker
-
-```bash
-docker compose up --build
-```
-
-If the client is in another container or host, set `CHIMERA_PUBLIC_HOST` to an address reachable **from the client**. Export lease URLs embed this value.
 
 ## Use with Transiva
 
@@ -379,62 +465,6 @@ Built-in scenarios:
 
 The `resume` scenario aborts the next export stream after 2 MiB. A compatible client can retry with `Range: bytes=N-` and continue from the partial offset.
 
-## Architecture
-
-```text
-                  +------------------------------------+
-                  |       Chimera Command Center       |
-                  | personas · inventory · faults · UI |
-                  +------------------+-----------------+
-                                     |
-                              /__chimera APIs
-                                     |
-                                     v
-Client / migration tool ---> +---------------------------+
-                             | Chimera public gateway    |
-                             | auth path · URL rewrite   |
-                             | Range/206 · faults · bw   |
-                             +-------------+-------------+
-                                           |
-                         +-----------------+-----------------+
-                         |                                   |
-                         v                                   v
-              +---------------------+             +--------------------+
-              | vSphere persona     |             | HTTP personas      |
-              | govmomi simulator   |             | Nutanix · Hyper-V  |
-              | SOAP/VIM inventory  |             | AWS · Azure        |
-              +----------+----------+             +--------------------+
-                         |                                   ^
-                         v                                   |
-              +---------------------+             +--------------------+
-              | export compatibility|             | planned: PVE /     |
-              | OVF · ExportVm · NFC|             | OpenStack          |
-              +----------+----------+             +--------------------+
-                         |
-                         v
-                    fixture store
-```
-
-## Project layout
-
-```text
-cmd/chimera/             CLI: serve, selftest, print-config
-internal/config/         config + environment overrides (incl. persona)
-internal/lab/            simulator lifecycle + TLS + HTTP persona start
-internal/exportshim/     current vSphere OVF/ExportVm/NFC compatibility
-internal/fixture/        generated/real VMDK fixture registry
-internal/gateway/        public proxy, APIs, Range, faults and embedded UX
-internal/faults/         deterministic scenario state
-internal/personas/       nutanix, hyperv, aws, azure + shared store
-internal/selftest/       govmomi end-to-end probe
-integration/             vSphere + Nutanix/Hyper-V + AWS/Azure compatibility tests
-docs/                    UX, architecture, Transiva guide, test matrix
-scripts/                 config, scenario, smoke, deploy and packaging helpers
-systemd/                 systemd unit (used by packages and deploy-remote.sh)
-packaging/               nfpm config for .deb/.rpm builds
-.github/workflows/       CI + tagged-release packaging
-```
-
 ## Testing
 
 ```bash
@@ -459,25 +489,63 @@ See [`docs/TEST_MATRIX.md`](docs/TEST_MATRIX.md) for the acceptance matrix.
 - [`docs/FAQ.md`](docs/FAQ.md) — licensing, support, scope questions
 - [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) — real issues, with the fix
 
+---
+
+## Maturity
+
+**Persona depth, stated honestly**: only vSphere is deep today
+("implemented" per the roadmap table below). Nutanix Prism v3, Hyper-V
+WS-Man, AWS EC2/EBS, and Azure ARM are "available" as **protocol surfaces
+only — no Command Center yet**. Proxmox VE and OpenStack remain on the
+roadmap, not started.
+
+| Persona | Status | Target compatibility |
+|---|---|---|
+| VMware vSphere | **Implemented** | SOAP / VIM / OVF / HTTP NFC |
+| Nutanix Prism | **Available** | Prism v3 auth / inventory / power / disk export |
+| Microsoft Hyper-V | **Available** | WS-Man Identify / Enumerate / Pull / power |
+| Amazon Web Services | **Available** | EC2 Query + EBS snapshot blocks (SigV4) |
+| Microsoft Azure | **Available** | ARM Compute + managed disk SAS (Bearer) |
+| Proxmox VE | Planned | PVE REST API / tasks / storage |
+| OpenStack | Planned | Keystone / Nova / Glance / Cinder |
+
+---
+
+## Part of the Zyvor stack
+
+| Product | Role next to Chimera |
+|---|---|
+| **Chimera** | Infrastructure protocol simulator for integration tests |
+| **[Transiva](https://github.com/zyvorai/zyvor-transiva)** | VM migration; Chimera implements the exact govmomi export boundaries Transiva's vSphere provider uses ([guide](docs/TRANSIVA.md)) |
+| **[h2kvm](https://github.com/zyvorai/zyvor-h2kvm)** | Disk conversion downstream of Transiva in the Chimera → Transiva → h2kvm → libvirt end-to-end chain |
+| **[Argus](https://github.com/zyvorai/zyvorai-argus)** | Autonomous QA; pairs with Chimera when the app under test talks to an infrastructure API |
+
+→ [zyvor.dev](https://zyvor.dev)
+
+---
+
 ## Contributing
 
 Issues and PRs are welcome. `make verify` runs the same checks as CI (build, vet, tests, `gofmt`, and a syntax check on the embedded dashboard JS) — run it before opening a PR.
 
 ## License
 
-Commercial subscriptions and support: see [docs/SUBSCRIPTION-MODEL.md](docs/SUBSCRIPTION-MODEL.md).
+Chimera is **free and open source** under the [Apache License, Version 2.0](LICENSE) (see [NOTICE](NOTICE)). You may use, modify, and run it for personal, lab, and commercial production use at no charge, subject to Apache-2.0 (preserve notices / NOTICE where required). That does not change.
 
-### Open source (Apache-2.0)
-
-This repository is licensed under the [Apache License, Version 2.0](LICENSE).
-You may use, modify, and run it for personal, lab, and commercial production
-use at no charge, subject to Apache-2.0 (preserve notices / NOTICE where required).
-
-### Enterprise
-
-Production support, SLAs, and Zyvor Enterprise products are licensed separately.
-Contact [sales@zyvor.dev](mailto:sales@zyvor.dev) or see [zyvor.dev](https://zyvor.dev?utm_source=github&utm_medium=chimera&utm_campaign=readme_footer).
-
-**Next step:** [Book a demo](https://zyvor.dev/schedule?utm_source=github&utm_medium=chimera&utm_campaign=readme_footer) · [30-day PoC](https://zyvor.dev/poc?utm_source=github&utm_medium=chimera&utm_campaign=readme_footer)
+**Zyvor Enterprise** adds what production teams ask for: supported releases, deployment and upgrade guidance, priority incident triage, a named technical contact and 24x7 critical intake. Plans and terms: [docs/SUBSCRIPTION-MODEL.md](docs/SUBSCRIPTION-MODEL.md) · [Pricing](https://zyvor.dev/pricing?utm_source=github&utm_medium=chimera&utm_campaign=readme_license) · [sales@zyvor.dev](mailto:sales@zyvor.dev).
 
 Social assets: [docs/social/](docs/social/).
+
+---
+
+<div align="center">
+
+### Test the migration before you touch the datacenter
+
+[![Book a demo](https://img.shields.io/badge/Book_a_demo-0071e3?style=for-the-badge)](https://zyvor.dev/schedule?utm_source=github&utm_medium=chimera&utm_campaign=readme_footer)
+[![30-day PoC](https://img.shields.io/badge/Start_a_30--day_PoC-000000?style=for-the-badge)](https://zyvor.dev/poc?utm_source=github&utm_medium=chimera&utm_campaign=readme_footer)
+[![Pricing](https://img.shields.io/badge/Pricing-1d1d1f?style=for-the-badge)](https://zyvor.dev/pricing?utm_source=github&utm_medium=chimera&utm_campaign=readme_footer)
+[![Contact sales](https://img.shields.io/badge/Contact_sales-0a84ff?style=for-the-badge)](mailto:sales@zyvor.dev?subject=Chimera)
+[![Star on GitHub](https://img.shields.io/github/stars/zyvorai/chimera?style=for-the-badge&logo=github&label=Star&color=2997ff)](https://github.com/zyvorai/chimera)
+
+</div>
