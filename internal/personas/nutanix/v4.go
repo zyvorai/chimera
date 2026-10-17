@@ -32,10 +32,23 @@ var (
 // SetNFSRoot makes the persona materialise each VM disk as a file below
 // <root>/<container>/.acropolis/vmdisk/<diskExtId>/, the layout a Nutanix
 // storage container has when mounted over NFS (what Transiva's pickup reads).
+//
+// When CHIMERA_NUTANIX_DISK_IMAGE names a file (qcow2, raw or vmdk), that real
+// image is copied in place of the deterministic filler bytes, so the exported
+// disk can be converted and booted downstream.
 func (s *Server) SetNFSRoot(root string) error {
 	s.NFSRoot = root
 	if root == "" {
 		return nil
+	}
+	var image []byte
+	if img := os.Getenv("CHIMERA_NUTANIX_DISK_IMAGE"); img != "" {
+		b, err := os.ReadFile(img)
+		if err != nil {
+			return err
+		}
+		image = b
+		s.Store.SetDiskSizes(int64(len(b)))
 	}
 	for _, vm := range s.Store.List() {
 		for _, d := range vm.Disks {
@@ -43,7 +56,11 @@ func (s *Server) SetNFSRoot(root string) error {
 			if err := os.MkdirAll(dir, 0o755); err != nil {
 				return err
 			}
-			if err := os.WriteFile(filepath.Join(dir, "disk.raw"), common.DiskBytes(vm.ID, d.ID, d.SizeBytes), 0o644); err != nil {
+			data, name := common.DiskBytes(vm.ID, d.ID, d.SizeBytes), "disk.raw"
+			if image != nil {
+				data, name = image, "disk.img"
+			}
+			if err := os.WriteFile(filepath.Join(dir, name), data, 0o644); err != nil {
 				return err
 			}
 		}
@@ -121,7 +138,28 @@ func (s *Server) v4GetVM(w http.ResponseWriter, r *http.Request, id string) {
 			return
 		}
 	}
-	http.NotFound(w, r)
+	v4NotFound(w, "VM "+id+" not found")
+}
+
+// v4NotFound answers with the vmm v4 ErrorResponse envelope real Prism uses; the
+// official SDK cannot decode a plain-text 404.
+func v4NotFound(w http.ResponseWriter, msg string) {
+	w.WriteHeader(http.StatusNotFound)
+	writeJSON(w, map[string]any{
+		"$objectType":            "vmm.v4.ahv.config.GetVmApiResponse",
+		"$dataItemDiscriminator": "vmm.v4.error.ErrorResponse",
+		"data": map[string]any{
+			"$objectType":             "vmm.v4.error.ErrorResponse",
+			"$errorItemDiscriminator": "List<vmm.v4.error.AppMessage>",
+			"error": []any{map[string]any{
+				"$objectType": "vmm.v4.error.AppMessage",
+				"message":     msg,
+				"severity":    "ERROR",
+				"code":        "VMM-30100",
+				"locale":      "en_US",
+			}},
+		},
+	})
 }
 
 // v4VMID / v4DiskID derive stable UUID-shaped extIds from the store ids.
