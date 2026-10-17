@@ -129,3 +129,14 @@ func DiskBytes(vmID, diskID string, size int64) []byte {
 	}
 	return out
 }
+
+// SetDiskSizes sets every disk to size bytes (used when a real image backs the disks).
+func (s *Store) SetDiskSizes(size int64) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, vm := range s.VMs {
+		for i := range vm.Disks {
+			vm.Disks[i].SizeBytes = size
+		}
+	}
+}
