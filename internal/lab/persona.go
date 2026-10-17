@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -42,7 +43,14 @@ func StartHTTPPersona(ctx context.Context, cfg config.Config) (*Lab, error) {
 	var endpoint string
 	switch strings.ToLower(cfg.Persona) {
 	case "nutanix":
-		h = nutanix.New(cfg.Username, cfg.Password, cfg.VMsPerPool)
+		ns := nutanix.New(cfg.Username, cfg.Password, cfg.VMsPerPool)
+		if root := os.Getenv("CHIMERA_NUTANIX_NFS_ROOT"); root != "" {
+			if err := ns.SetNFSRoot(root); err != nil {
+				ln.Close()
+				return nil, fmt.Errorf("nutanix nfs fixture: %w", err)
+			}
+		}
+		h = ns
 		endpoint = "/api/nutanix/v3"
 	case "hyperv":
 		h = hyperv.New(cfg.Username, cfg.Password, cfg.VMsPerPool)
