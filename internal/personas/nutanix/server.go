@@ -17,6 +17,7 @@ type Server struct {
 	Username string
 	Password string
 	Store    *common.Store
+	NFSRoot  string
 }
 
 func New(username, password string, vmCount int) *Server {
@@ -31,6 +32,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	p := strings.TrimSuffix(r.URL.Path, "/")
+	if s.serveV4(w, r, p) {
+		return
+	}
 	switch {
 	case r.Method == http.MethodGet && p == "/api/nutanix/v3/cluster":
 		writeJSON(w, map[string]any{"metadata": map[string]any{"kind": "cluster"}, "status": map[string]any{"name": "chimera-prism", "resources": map[string]any{"config": map[string]any{"service_list": []string{"AOS", "AHV"}}}}})
