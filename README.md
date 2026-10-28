@@ -528,6 +528,10 @@ roadmap, not started.
 
 Issues and PRs are welcome. `make verify` runs the same checks as CI (build, vet, tests, `gofmt`, and a syntax check on the embedded dashboard JS) — run it before opening a PR.
 
+## Support
+
+Free under Apache-2.0. If it helps you, you can donate any amount you like: <https://rzp.io/rzp/utwdYh3>. A donation is voluntary and supports development and maintenance. It is not a purchase: it buys no support, SLA, features, priority or license, and it is not tax-deductible (Zyvor AI Labs Private Limited is a company, not a charity). Support contracts are separate: [sales@zyvor.dev](mailto:sales@zyvor.dev).
+
 ## License
 
 Chimera is **free and open source** under the [Apache License, Version 2.0](LICENSE) (see [NOTICE](NOTICE)). You may use, modify, and run it for personal, lab, and commercial production use at no charge, subject to Apache-2.0 (preserve notices / NOTICE where required). That does not change.
