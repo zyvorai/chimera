@@ -35,6 +35,8 @@ Chimera is a test and compatibility appliance. It is not VMware, Nutanix, Micros
 
 ---
 
+[Client overview (PDF)](docs/Chimera-Client-Overview.pdf)
+
 ## What's new
 
 | | |
