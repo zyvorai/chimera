@@ -1,12 +1,11 @@
 # Chimera: support subscriptions
 
-Chimera is source-available software. Non-production use is free under the Zyvor Production License v1.0; production use requires a commercial license (sales@zyvor.dev).
+Chimera is source-available software. Running it requires a commercial license from Zyvor (sales@zyvor.dev).
 
 Teams that want supported releases and defined response targets can buy an annual **support subscription** from Zyvor.
 
 | Plan | What you get | Coverage |
 |------|--------------|----------|
-| Community | The software, community documentation and public issue tracking | No contracted response target |
 | Standard | Deployment and upgrade guidance, defined supported configuration | Business hours |
 | Supported | Standard plus priority queue and incident triage | Business hours, faster response |
 | Enterprise | Supported plus a named technical contact and 24x7 critical intake | One-hour initial response target for critical issues |
