@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Copyright 2026 Zyvor AI Labs · https://zyvor.dev
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
 # deploy-remote.sh — Deploy Chimera to a remote host as a systemd service
 # ============================================================================
 # Chimera builds as a single static binary (CGO_ENABLED=0, see Dockerfile), so
