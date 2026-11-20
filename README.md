@@ -35,8 +35,6 @@ Chimera is a test and compatibility appliance. It is not VMware, Nutanix, Micros
 
 ---
 
-[Client overview (PDF)](docs/Chimera-Client-Overview.pdf)
-
 ## What's new
 
 | | |
@@ -64,24 +62,7 @@ Chimera is a test and compatibility appliance. It is not VMware, Nutanix, Micros
 
 ---
 
-## Chimera vs vcsim
-
-![Chimera vs vcsim: built on govmomi's simulator, ready for export tests](docs/ux/readme-vs.jpg)
-
-Chimera's vSphere persona embeds govmomi's simulator — the same project as vcsim — and builds the test appliance around it.
-
-| | **Chimera** | **vcsim** (govmomi's vCenter simulator) |
-|---|---|---|
-| Form | Test appliance: one binary, `.deb`/`.rpm`, Docker, systemd unit | Go library plus a `vcsim` binary |
-| Platforms | vSphere, plus Nutanix Prism v3, Hyper-V WS-Man, AWS EC2/EBS, Azure ARM | vSphere / vCenter |
-| vSphere API | govmomi simulator, plus the OVF / `ExportVm` / `HttpNfcLease` / NFC shim | govmomi simulator |
-| Fault injection | Fault Studio and admin API: latency, status codes, NFC failures, stream drops, bandwidth caps | Custom Go method handlers |
-| Disk content | Generated stream or real VMDK per VM, browser upload, recursive directory scan | — |
-| Dashboard | Embedded Command Center at `/__chimera/` | — |
-| License | Zyvor Production 1.0 (free non-production) | Apache-2.0 (part of govmomi) |
-| **Choose vcsim when** | | Your tests are vSphere-only and you want a Go library inside your test process rather than an appliance |
-
-### Is this for you?
+## Is this for you?
 
 Chimera is a small, source-available (Zyvor Production License v1.0) **test double for infrastructure
 platform protocols** — it exists so migration/discovery/export/automation
@@ -89,17 +70,9 @@ software can be integration-tested without a real vCenter, Nutanix cluster,
 Hyper-V host, AWS account, or Azure subscription. It is not a general HTTP
 mock framework and not a production infrastructure platform.
 
-| | **Chimera** | vcsim (govmomi's own vCenter simulator) | LocalStack (AWS) | WireMock / Testcontainers |
-|---|---|---|---|---|
-| Primary scope | Multi-platform infra persona simulation (vSphere deepest, plus Nutanix/Hyper-V/AWS/Azure) | vSphere/vCenter only | AWS service emulation only | Generic HTTP mocking / real service containers |
-| vSphere depth | Full govmomi session + inventory + `ExportVm`/`HttpNfcLease`/Range-206 VMDK download | Similar depth, vSphere-only (from the same govmomi project) | N/A | N/A — you'd hand-write the mock |
-| Multi-cloud/platform in one engine | Yes — one engine, five personas | No | No (AWS-only) | N/A (generic) |
-| License | Zyvor Production 1.0 (free non-production) | Apache-2.0 (part of govmomi) | Apache-2.0 (core) | Apache-2.0 |
-
-*(General characterizations as of writing — verify current features against
-each project's own docs. vcsim specifically is worth evaluating side by
-side if your integration testing is vSphere-only — Chimera's value is
-specifically the multi-persona breadth in one engine.)*
+Chimera's vSphere persona embeds govmomi's simulator (vcsim) and builds the
+test appliance around it; the other personas emulate Nutanix Prism v3, Hyper-V
+WS-Man, AWS EC2/EBS and Azure ARM.
 
 New here? [`docs/FAQ.md`](docs/FAQ.md) covers licensing, support, and
 scope questions; [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)

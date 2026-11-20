@@ -27,7 +27,6 @@ node scripts/user-docs/build-user-pdfs.mjs
 
 Output lands in [`pdf/`](pdf/):
 
-- `Chimera-User-README.pdf`
 - `Chimera-Getting-Started.pdf`
 - `Chimera-Page-by-Page.pdf`
 - `Chimera-Admin-Basics.pdf`

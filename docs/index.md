@@ -34,23 +34,6 @@ footnotes:
 For the full project overview, installation instructions, and roadmap, see
 the **[README on GitHub](https://github.com/zyvorai/chimera)**.
 
-## How Chimera compares
-
-<div class="compare-cards" markdown="1">
-
-- **Chimera**
-  One engine, five personas — vSphere deepest (full govmomi session, `ExportVm`/`HttpNfcLease`, HTTP Range/206 resume), plus Nutanix, Hyper-V, AWS, and Azure as protocol surfaces.
-- **vcsim (govmomi's own vCenter simulator)**
-  Similar vSphere depth, from the same govmomi project — but vSphere-only.
-- **LocalStack**
-  AWS service emulation only — no vSphere, Nutanix, Hyper-V, or Azure coverage.
-- **WireMock / Testcontainers**
-  Generic HTTP mocking or real service containers — you hand-write the persona yourself.
-
-</div>
-
-*(General characterizations as of writing — verify current features against each project's own docs.)*
-
 Chimera is licensed under the Zyvor Production License v1.0. It is a test and compatibility appliance —
 not VMware, Nutanix, Microsoft, Amazon, Red Hat, Proxmox, or cloud-vendor
 software — and it is not intended to host production workloads.
