@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/zyvorai/chimera/actions/workflows/ci.yml/badge.svg)](https://github.com/zyvorai/chimera/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/zyvorai/chimera.svg)](https://pkg.go.dev/github.com/zyvorai/chimera)
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![License: Zyvor Production](https://img.shields.io/badge/license-Zyvor%20Production%201.0-blue.svg)](LICENSE)
 [![Go](https://img.shields.io/badge/Go-1.25%2B-00ADD8?logo=go&logoColor=white)](go.mod)
 
 [![Book a demo](https://img.shields.io/badge/Book_a_demo-0071e3?style=for-the-badge)](https://zyvor.dev/schedule?utm_source=github&utm_medium=chimera&utm_campaign=readme_hero)
@@ -17,7 +17,7 @@
 
 **Programmable infrastructure simulation for migration, export, and automation tests — without provisioning the real platform.** A real govmomi client can log in, walk inventory, call `ExportVm`, wait on an `HttpNfcLease` and resume a broken VMDK download with HTTP Range/206, with Nutanix, Hyper-V, AWS and Azure protocol personas in the same engine.
 
-**5 provider personas** · **Real govmomi export path** · **Range/206 resume** · **Deterministic fault scenarios** · **Apache-2.0, single Go binary**
+**5 provider personas** · **Real govmomi export path** · **Range/206 resume** · **Deterministic fault scenarios** · **Zyvor Production License, single Go binary**
 
 📖 **[Read the docs](https://zyvor.dev/docs/chimera?utm_source=github&utm_medium=chimera&utm_campaign=readme_suite)** — UX, provider architecture, Transiva recipes, and the test matrix.
 
@@ -78,12 +78,12 @@ Chimera's vSphere persona embeds govmomi's simulator — the same project as vcs
 | Fault injection | Fault Studio and admin API: latency, status codes, NFC failures, stream drops, bandwidth caps | Custom Go method handlers |
 | Disk content | Generated stream or real VMDK per VM, browser upload, recursive directory scan | — |
 | Dashboard | Embedded Command Center at `/__chimera/` | — |
-| License | Apache-2.0 | Apache-2.0 (part of govmomi) |
+| License | Zyvor Production 1.0 (free non-production) | Apache-2.0 (part of govmomi) |
 | **Choose vcsim when** | | Your tests are vSphere-only and you want a Go library inside your test process rather than an appliance |
 
 ### Is this for you?
 
-Chimera is a small, open-source (Apache-2.0) **test double for infrastructure
+Chimera is a small, source-available (Zyvor Production License v1.0) **test double for infrastructure
 platform protocols** — it exists so migration/discovery/export/automation
 software can be integration-tested without a real vCenter, Nutanix cluster,
 Hyper-V host, AWS account, or Azure subscription. It is not a general HTTP
@@ -94,7 +94,7 @@ mock framework and not a production infrastructure platform.
 | Primary scope | Multi-platform infra persona simulation (vSphere deepest, plus Nutanix/Hyper-V/AWS/Azure) | vSphere/vCenter only | AWS service emulation only | Generic HTTP mocking / real service containers |
 | vSphere depth | Full govmomi session + inventory + `ExportVm`/`HttpNfcLease`/Range-206 VMDK download | Similar depth, vSphere-only (from the same govmomi project) | N/A | N/A — you'd hand-write the mock |
 | Multi-cloud/platform in one engine | Yes — one engine, five personas | No | No (AWS-only) | N/A (generic) |
-| License | Apache-2.0 | Apache-2.0 (part of govmomi) | Apache-2.0 (core) | Apache-2.0 |
+| License | Zyvor Production 1.0 (free non-production) | Apache-2.0 (part of govmomi) | Apache-2.0 (core) | Apache-2.0 |
 
 *(General characterizations as of writing — verify current features against
 each project's own docs. vcsim specifically is worth evaluating side by
@@ -532,11 +532,14 @@ Issues and PRs are welcome. `make verify` runs the same checks as CI (build, vet
 
 ## Support
 
-Free under Apache-2.0. If it helps you, you can donate any amount you like: <https://rzp.io/rzp/utwdYh3>. A donation is voluntary and supports development and maintenance. It is not a purchase: it buys no support, SLA, features, priority or license, and it is not tax-deductible (Zyvor AI Labs Private Limited is a company, not a charity). Support contracts are separate: [sales@zyvor.dev](mailto:sales@zyvor.dev).
+Non-production use is free under the Zyvor Production License v1.0; production use requires a commercial license (sales@zyvor.dev). If it helps you, you can donate any amount you like: <https://rzp.io/rzp/utwdYh3>. A donation is voluntary and supports development and maintenance. It is not a purchase: it buys no support, SLA, features, priority or license, and it is not tax-deductible (Zyvor AI Labs Private Limited is a company, not a charity). Support contracts are separate: [sales@zyvor.dev](mailto:sales@zyvor.dev).
 
 ## License
 
-Chimera is **free and open source** under the [Apache License, Version 2.0](LICENSE) (see [NOTICE](NOTICE)). You may use, modify, and run it for personal, lab, and commercial production use at no charge, subject to Apache-2.0 (preserve notices / NOTICE where required). That does not change.
+Chimera is source-available under the **[Zyvor Production License v1.0](LICENSE)** (SPDX `LicenseRef-Zyvor-Production-1.0`, also in [LICENSES/](LICENSES/LicenseRef-Zyvor-Production-1.0.txt); see [NOTICE](NOTICE)).
+
+- **Free** for evaluation, development, testing, proofs of concept, research, education and all other non-production use.
+- **Production use needs a commercial license** from Zyvor AI Labs. A 30-day trial key is available for production evaluation. Buy / get a quote: [zyvor.dev/buy](https://zyvor.dev/buy) · [sales@zyvor.dev](mailto:sales@zyvor.dev).
 
 **Zyvor Enterprise** adds what production teams ask for: supported releases, deployment and upgrade guidance, priority incident triage, a named technical contact and 24x7 critical intake. Plans and terms: [docs/SUBSCRIPTION-MODEL.md](docs/SUBSCRIPTION-MODEL.md) · [Pricing](https://zyvor.dev/pricing?utm_source=github&utm_medium=chimera&utm_campaign=readme_license) · [sales@zyvor.dev](mailto:sales@zyvor.dev).
 

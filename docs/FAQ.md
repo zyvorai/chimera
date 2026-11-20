@@ -9,9 +9,9 @@ to adopt it.
 
 ## Licensing & cost
 
-**Is it really free?** Yes. Apache-2.0 — use, modify, and run it for
-personal, lab, and commercial production use at no charge, subject to
-preserving notices. See the README's [License](https://github.com/zyvorai/chimera#license)
+**Is it really free?** For non-production use, yes: the Zyvor Production
+License v1.0 makes evaluation, development, testing, research and education
+free. Production use needs a commercial license (sales@zyvor.dev). See the README's [License](https://github.com/zyvorai/chimera#license)
 section.
 
 **What does "Enterprise" mean here?** Production support, SLAs, and

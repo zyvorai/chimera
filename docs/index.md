@@ -17,7 +17,7 @@ hero:
     - {value: "1", label: "Persona with a full Command Center dashboard today — vSphere", footnote: "2"}
     - {value: "98", label: "Checks in the cross-persona acceptance matrix", footnote: "3"}
     - {value: "6", label: "Live KPIs on the Command Center dashboard", footnote: "4"}
-    - {value: "Apache-2.0", label: "Open source license"}
+    - {value: "Zyvor Production 1.0", label: "Source-available license"}
   hub_bands:
     - {icon: "❓", title: "FAQ", description: "Questions people evaluating Chimera actually ask, before they've decided to adopt it.", href: "FAQ.md"}
     - {icon: "🛠️", title: "Troubleshooting", description: "Real issues, with the actual fix.", href: "TROUBLESHOOTING.md"}
@@ -51,6 +51,6 @@ the **[README on GitHub](https://github.com/zyvorai/chimera)**.
 
 *(General characterizations as of writing — verify current features against each project's own docs.)*
 
-Chimera is Apache-2.0 licensed. It is a test and compatibility appliance —
+Chimera is licensed under the Zyvor Production License v1.0. It is a test and compatibility appliance —
 not VMware, Nutanix, Microsoft, Amazon, Red Hat, Proxmox, or cloud-vendor
 software — and it is not intended to host production workloads.
