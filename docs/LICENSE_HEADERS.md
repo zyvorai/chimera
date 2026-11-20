@@ -1,0 +1,14 @@
+---
+hero:
+  eyebrow: LICENSE HEADERS
+  title: Source license headers
+---
+
+Zyvor Production License v1.0 — every Go source file, shell script, and Dockerfile includes:
+
+```text
+Copyright 2026 Zyvor AI Labs · https://zyvor.dev
+SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
+```
+
+Full license: [LICENSE](https://github.com/zyvorai/chimera/blob/main/LICENSE).

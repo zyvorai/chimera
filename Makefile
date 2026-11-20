@@ -1,0 +1,34 @@
+# Copyright 2026 Zyvor AI Labs · https://zyvor.dev
+# SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
+.PHONY: build test vet verify fmt run docker transiva-config package fixtures
+
+build:
+	go build -o bin/chimera ./cmd/chimera
+
+test:
+	go test ./...
+
+vet:
+	go vet ./...
+
+verify:
+	./scripts/verify.sh
+
+fmt:
+	gofmt -w $$(find . -name '*.go' -type f)
+
+run:
+	go run ./cmd/chimera serve -config config.example.json
+
+docker:
+	docker compose up --build
+
+transiva-config:
+	./scripts/make-transiva-config.sh > transiva-chimera.yaml
+	@echo "wrote transiva-chimera.yaml"
+
+package:
+	./scripts/package.sh
+
+fixtures:
+	./scripts/fetch-sample-fixtures.sh

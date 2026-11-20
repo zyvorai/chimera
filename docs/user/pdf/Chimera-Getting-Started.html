@@ -1,0 +1,246 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/><title>Getting Started — Chimera</title>
+<style>
+@page{size:A4;margin:15mm 16mm}*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{font-family:'Segoe UI',system-ui,sans-serif;color:#1f2937;line-height:1.58;font-size:10.5pt}
+.cover{height:262mm;margin:-15mm -16mm 0;background:linear-gradient(135deg,#1e1b4b,#312e81,#0d1b2a);color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;page-break-after:always;position:relative}
+.cover .kicker{letter-spacing:5px;text-transform:uppercase;opacity:.72;margin-bottom:1.4em}
+.cover h1{font-size:3.2em;font-weight:800;letter-spacing:-2px}
+.cover h1 span{color:#a78bfa}
+.cover .sub{font-size:1.3em;font-weight:300;opacity:.93;margin:1em 0;max-width:24em}
+.cover .badge{display:inline-block;background:rgba(96,165,250,.2);border:1px solid #a78bfa;padding:8px 22px;border-radius:20px;margin-top:2em}
+.cover .foot{position:absolute;bottom:34px;font-size:.82em;opacity:.6}
+h2{page-break-before:always;margin:0 0 .35em;font-size:1.55em;font-weight:750;color:#12203a;border-bottom:2px solid #e5edfb;padding-bottom:.28em}
+h2:first-of-type{page-break-before:avoid}
+h3{margin:1.1em 0 .4em;font-size:1.12em;font-weight:700}
+p,li{margin:.4em 0}ul,ol{margin:.5em 0 .9em 1.4em}
+a{color:#2563eb;text-decoration:none}
+code{background:#eef2f7;padding:1px 6px;border-radius:4px;font-size:.86em;font-family:ui-monospace,Menlo,monospace}
+pre{background:#0f172a;color:#e2e8f0;padding:12px 15px;border-radius:9px;overflow-x:auto;margin:.8em 0}
+table{width:100%;border-collapse:collapse;margin:.8em 0 1.1em;font-size:9.5pt}
+th,td{border:1px solid #e5e7eb;padding:6px 8px;text-align:left;vertical-align:top}th{background:#f1f5f9}
+hr{border:none;border-top:1px solid #e5e7eb;margin:1.2em 0}
+</style></head><body>
+<section class="cover"><div class="kicker">ZyvorAI Labs · User Documentation</div>
+<h1>Chi<span>mera</span></h1>
+<div class="sub">Getting Started</div>
+<div class="badge">2026-09-04</div>
+<div class="foot">zyvor.dev · Confidential — for licensed users</div></section>
+<main><h2>What you need</h2>
+<ul>
+<li>Go 1.25+ to build from source, <strong>or</strong> a <code>.deb</code>/<code>.rpm</code> from <a href="https://github.com/zyvorai/chimera/releases/latest">GitHub Releases</a></li>
+<li>Browser for Command Center at <code>/__chimera/</code></li>
+<li>Optional: Transiva checkout for end-to-end export smoke</li>
+</ul>
+<h2>1. Start the engine</h2>
+<pre><code class="language-bash">git clone https://github.com/zyvorai/chimera.git
+cd chimera
+go mod tidy
+go build -o bin/chimera ./cmd/chimera
+./bin/chimera serve -config config.example.json
+</code></pre>
+<p>Or remote install:</p>
+<pre><code class="language-bash">./scripts/deploy-remote.sh &lt;host&gt; [user]
+</code></pre>
+<h2>2. Open Command Center</h2>
+<pre><code class="language-text">http://&lt;host&gt;:8989/__chimera/
+</code></pre>
+<p>Log in with <strong>admin</strong> / <strong>admin</strong> (change later in Settings). Without a session the UI shows only the login screen — no inventory flash.</p>
+<h2>3. Confirm the vSphere persona</h2>
+<pre><code class="language-bash">./bin/chimera selftest \
+  -url http://&lt;host&gt;:8989/sdk \
+  -user administrator@vsphere.local \
+  -pass vmware
+</code></pre>
+<p>A passing self-test proves auth, inventory, OVF descriptor, <code>ExportVm</code>, and NFC lease download.</p>
+<h3>Optional: protocol personas (Nutanix, Hyper-V, AWS, Azure)</h3>
+<p>Command Center stays on the vSphere listener. For other protocol smoke tests, start a second process (or replace the persona) with env overrides:</p>
+<pre><code class="language-bash">CHIMERA_PERSONA=nutanix CHIMERA_USERNAME=admin CHIMERA_PASSWORD=secret \
+  ./bin/chimera serve -listen 0.0.0.0:8990
+# → http://&lt;host&gt;:8990/api/nutanix/v3
+
+CHIMERA_PERSONA=hyperv CHIMERA_USERNAME=Administrator CHIMERA_PASSWORD=secret \
+  ./bin/chimera serve -listen 0.0.0.0:8991
+# → http://&lt;host&gt;:8991/wsman
+
+CHIMERA_PERSONA=aws CHIMERA_USERNAME=AKIDCHIMERA CHIMERA_PASSWORD=chimera-secret \
+  ./bin/chimera serve -listen 0.0.0.0:8992
+# → EC2 Query at http://&lt;host&gt;:8992/
+
+CHIMERA_PERSONA=azure CHIMERA_USERNAME=11111111-2222-3333-4444-555555555555 \
+  CHIMERA_PASSWORD=chimera-azure-token ./bin/chimera serve -listen 0.0.0.0:8993
+# → ARM at http://&lt;host&gt;:8993/subscriptions/...
+</code></pre>
+<p>See product-repo <code>README.md</code>, <code>docs/PROVIDER_ARCHITECTURE.md</code>, and <code>docs/AWS_AZURE_PERSONAS.md</code>.</p>
+<h2>4. First useful checks in the UI</h2>
+<ol>
+<li>Overview KPIs populate after self-test (requests, sessions, exports).</li>
+<li>Topology shows datacenter → cluster → host → datastore.</li>
+<li>VM inventory lists simulator VMs (for example <code>DC0_C0_RP0_VM0</code>).</li>
+<li>Scenario Launcher: try <strong>Clean Environment</strong>, then <strong>Slow Fabric</strong> and watch latency in Live requests.</li>
+</ol>
+<h2>Operate from the console (UX)</h2>
+<ol>
+<li>Browse to <code>http(s)://&lt;host&gt;:8989/__chimera/</code> and sign in (<strong>admin</strong> / <strong>admin</strong> unless rotated).</li>
+<li>Confirm sidebar <strong>System Health</strong> ring and footer <strong>vSphere Persona</strong> strip show uptime and SDK endpoint.</li>
+<li>Click <strong>↻ Refresh</strong> on Overview if KPIs are flat, then run <code>selftest</code> from the host.</li>
+<li>Open <strong>Inventory</strong> — verify VM count badge matches config; copy a VM name with the row <strong>⇩</strong> action.</li>
+<li>Optional: <strong>Settings</strong> (gear) → change admin password before sharing the lab URL.</li>
+</ol>
+<p><strong>Empty / fail:</strong> Login loop → defaults or <code>CHIMERA_ADMIN_*</code>; KPIs zero after selftest → client must use <code>/sdk</code> URL. Inventory empty → restart after config estate changes.</p>
+<p><strong>Success:</strong> KPIs and Live requests move during selftest; topology subtitle shows your datacenter/cluster counts.</p>
+<h2>Next</h2>
+<ul>
+<li><a href="using-the-dashboard.md">Using the Dashboard</a></li>
+<li><a href="workflows.md">Wire Transiva</a></li>
+<li><a href="admin-basics.md">Admin basics</a></li>
+<li><a href="pages/README.md">Page-by-page guides</a></li>
+</ul>
+<hr>
+<p>Chimera&#39;s <strong>Command Center</strong> is a single-page infrastructure console embedded in the Go binary (<code>internal/gateway/ui.go</code>). There is no Node/React build step — open <code>/__chimera/</code> on the same listener as the vSphere SDK.</p>
+<h2>Shell layout</h2>
+<table>
+<thead>
+<tr>
+<th>Region</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Left rail</td>
+<td>Control Center nav, provider personas (vSphere active in UI; Nutanix/Hyper-V/AWS/Azure via <code>CHIMERA_PERSONA</code>; others roadmap), System Health ring</td>
+</tr>
+<tr>
+<td>Top bar</td>
+<td>Global search (⌘K), Scenario shortcut, Fault Studio (bolt), notifications bell → Live requests, Settings (gear), user menu (logout)</td>
+</tr>
+<tr>
+<td>Main column</td>
+<td>Overview KPIs, topology, Top Activity, Live requests, VM inventory, Scenario Launcher, VMDK Library</td>
+</tr>
+<tr>
+<td>Right drawers</td>
+<td>Fault Studio (fault injection) and Settings (listen address + admin credentials)</td>
+</tr>
+</tbody></table>
+<h2>How to move around</h2>
+<ol>
+<li>Sign in — mutating controls (scenarios, faults, VMDK upload, credential save) require a dashboard session.</li>
+<li>Use sidebar anchors or scroll — Overview is one long workbench page with hash targets (<code>#topology</code>, <code>#inventory</code>, <code>#vmdks</code>, <code>#requests</code>, <code>#activity</code>, <code>#scenarios</code>).</li>
+<li>Click <strong>↻ Refresh</strong> after scenario or fault changes if you want an immediate telemetry pull (otherwise ~2s polling).</li>
+<li>Open <strong>View Full Topology</strong> for the zoomable estate map (<strong>Fit</strong> / <strong>＋</strong>, Escape to exit).</li>
+<li>Filter VMs by name or power state; paginate 5 per page; global search focuses inventory.</li>
+<li>Open <strong>Fault Studio</strong> from the bolt icon (not the gear — that is Settings).</li>
+</ol>
+<h2>Operate from the console (UX)</h2>
+<ol>
+<li>Land on Overview after login; read six KPI tiles and sidebar health ring.</li>
+<li>Drive traffic with <code>selftest</code> or Transiva against <code>http(s)://&lt;host&gt;:8989/sdk</code> — dashboard polls do not inflate metrics.</li>
+<li>Use <strong>Scenario Launcher</strong> for presets; open <strong>Fault Studio</strong> for manual latency/failure/NFC drop tuning.</li>
+<li>Stage real disks via <strong>VMDK Library</strong> when testing conversion, not just synthetic export.</li>
+<li>Bell icon jumps to <strong>Live requests</strong> when errors spike; toggle <strong>View All</strong> for 30-row buffer.</li>
+<li>Rotate admin password under <strong>Settings</strong> before exposing <code>&lt;host&gt;</code> beyond a lab VLAN.</li>
+</ol>
+<p><strong>Empty / fail:</strong> See table below; page guides under <a href="pages/README.md">pages/</a> have surface-specific checks.</p>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Check</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Login loop</td>
+<td>Defaults <code>admin</code>/<code>admin</code>; or values set via Settings / <code>CHIMERA_ADMIN_*</code></td>
+</tr>
+<tr>
+<td>Empty inventory</td>
+<td>Simulator counts in config; restart after config changes</td>
+</tr>
+<tr>
+<td>No KPI movement</td>
+<td>Clients must hit <code>/sdk</code>, not <code>/__chimera/</code></td>
+</tr>
+<tr>
+<td>Self-test fails</td>
+<td>URL must be the SDK (<code>/sdk</code>), not Command Center</td>
+</tr>
+<tr>
+<td>Fault Studio vs Settings</td>
+<td>Bolt = faults; gear = settings</td>
+</tr>
+</tbody></table>
+<p><strong>Success:</strong> KPIs, activity donut, and live request feed update during exports; scenarios toast confirmation; VM/fixture badges reflect VMDK matching.</p>
+<p>Next: <a href="pages/README.md">Page-by-page guides</a> · <a href="workflows.md">Workflows</a></p>
+<hr>
+<p>End-to-end jobs mixing CLI and Command Center. Use <code>&lt;host&gt;</code> for any lab address — never hard-code deployment IPs in runbooks.</p>
+<h2>A. Prove the vSphere contract (self-test)</h2>
+<pre><code class="language-bash">./bin/chimera selftest \
+  -url http://&lt;host&gt;:8989/sdk \
+  -user administrator@vsphere.local \
+  -pass vmware
+</code></pre>
+<p>Expect: login → inventory → OVF descriptor → ExportVm → NFC download success.</p>
+<h3>Operate from the console (UX)</h3>
+<ol>
+<li>Sign in at <code>http(s)://&lt;host&gt;:8989/__chimera/</code>.</li>
+<li>Run selftest from the host (command above).</li>
+<li>Watch <strong>Requests</strong>, <strong>Exports</strong>, and <strong>Avg Response</strong> KPIs tick up.</li>
+<li>Open <strong>Live requests</strong> — confirm SOAP/SDK/NFC paths with 2xx statuses.</li>
+<li><strong>Top Activity</strong> donut should gain segments after the run.</li>
+</ol>
+<p><strong>Fail:</strong> KPIs flat → selftest URL wrong (must be <code>/sdk</code>). Red statuses → <a href="pages/command-center/fault-studio.md">Fault Studio</a> → <strong>Reset</strong> or <strong>Clean Environment</strong> scenario.</p>
+<h2>B. Wire Transiva export</h2>
+<pre><code class="language-bash">./scripts/make-transiva-config.sh &gt; /tmp/transiva-chimera.yaml
+# Point Transiva / hyperexport at that config (see docs/TRANSIVA.md)
+</code></pre>
+<p>Confirm <code>vcenter_url</code> uses Chimera&#39;s <code>&lt;host&gt;</code> (not laptop <code>127.0.0.1</code> if Transiva runs elsewhere) and <code>insecure: true</code> for lab TLS.</p>
+<h3>Operate from the console (UX)</h3>
+<ol>
+<li>Copy a target VM from <strong>Inventory</strong> (row <strong>⇩</strong> or <strong>Export VM</strong> after filtering).</li>
+<li>Start Transiva export; keep Command Center open on <strong>Live requests</strong>.</li>
+<li>Monitor <strong>Exports</strong> KPI and NFC rows; check <strong>Fixture</strong> badge (<code>Synthetic</code> vs real VMDK).</li>
+<li>Use footer SDK endpoint string when verifying Transiva points at the same <code>&lt;host&gt;</code>.</li>
+</ol>
+<p><strong>Success:</strong> Steady NFC traffic, rising byte counter, green statuses unless faults armed.</p>
+<h2>C. Resume / Range download</h2>
+<pre><code class="language-bash">./scripts/scenario.sh resume
+# or click Resume Export in Scenario Launcher
+</code></pre>
+<p>Drops the next NFC stream after ~2 MiB so Transiva retries with <code>Range: bytes=N-</code> and Chimera returns HTTP 206.</p>
+<h3>Operate from the console (UX)</h3>
+<ol>
+<li>Sign in → <strong>Scenario Launcher</strong> → <strong>Resume Export</strong> (or CLI above).</li>
+<li>Run export; watch <strong>Live requests</strong> for initial failure then <strong>206</strong> on retry.</li>
+<li><strong>Clean Environment</strong> or Fault Studio <strong>Reset</strong> before the next baseline run.</li>
+</ol>
+<p><strong>Fail:</strong> No 206 → client may not send Range; see product <code>docs/TRANSIVA.md</code>.</p>
+<h2>D. Fault injection for client hardening</h2>
+<h3>Operate from the console (UX)</h3>
+<ol>
+<li>Open <strong>Fault Studio</strong> (bolt icon or sidebar).</li>
+<li>Set latency, <strong>Fail next requests</strong>, NFC drop fields, or bandwidth cap → <strong>Apply policy</strong>.</li>
+<li>Re-run Transiva export or <code>selftest</code>; correlate with red rows in <strong>Live requests</strong>.</li>
+<li><strong>Reset</strong> or <strong>Clean Environment</strong> before benchmark runs.</li>
+</ol>
+<p><strong>Success:</strong> Injected errors visible in feed and error-rate KPI; clean reset returns nominal metrics.</p>
+<h2>E. Real VMDK fixtures</h2>
+<ol>
+<li>Stage <code>.vmdk</code> files under <code>fixture_vmdk_dir</code> or use <strong>VMDK Library → Upload VMDK</strong>.</li>
+<li>Optionally pin a file to a VM (<strong>Manual</strong> fixture badge in Inventory).</li>
+<li>Export that VM through Transiva to exercise conversion, not only transfer.</li>
+</ol>
+<h3>Operate from the console (UX)</h3>
+<ol>
+<li><strong>VMDK Library</strong> → confirm file listed with assignment method.</li>
+<li><strong>Inventory</strong> → hover fixture badge for filename; expect <strong>Matched</strong> / <strong>Manual</strong> instead of <strong>Synthetic</strong>.</li>
+<li>Run export; verify larger disk payload in telemetry bytes transferred.</li>
+</ol>
+<p>Matching rules: see product-repo <code>docs/TRANSIVA.md</code>.</p>
+<h2>Related pages</h2>
+<ul>
+<li><a href="using-the-dashboard.md">Using the Dashboard</a></li>
+<li><a href="admin-basics.md">Admin basics</a></li>
+<li><a href="pages/README.md">Page-by-page guides</a></li>
+</ul>
+</main></body></html>

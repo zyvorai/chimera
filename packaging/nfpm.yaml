@@ -1,0 +1,32 @@
+name: chimera
+arch: "${ARCH}"
+platform: linux
+version: "${VERSION}"
+section: net
+priority: optional
+maintainer: "Zyvor AI Labs <info@zyvor.dev>"
+description: |
+  Programmable infrastructure endpoint simulator (vSphere, Nutanix Prism v3,
+  Hyper-V WS-Man, AWS EC2/EBS, Azure ARM; Proxmox and OpenStack planned).
+vendor: "Zyvor AI Labs"
+homepage: "https://github.com/zyvorai/chimera"
+license: LicenseRef-Zyvor-Production-1.0
+
+contents:
+  - src: dist/build/chimera
+    dst: /usr/bin/chimera
+  - src: systemd/chimera.service
+    dst: /lib/systemd/system/chimera.service
+  - src: packaging/chimera.env
+    dst: /etc/chimera/chimera.env
+    type: config|noreplace
+  - src: config.example.json
+    dst: /usr/share/doc/chimera/config.example.json
+  - src: README.md
+    dst: /usr/share/doc/chimera/README.md
+  - src: LICENSE
+    dst: /usr/share/doc/chimera/LICENSE
+
+scripts:
+  postinstall: packaging/postinstall.sh
+  postremove: packaging/postremove.sh
