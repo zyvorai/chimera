@@ -493,7 +493,7 @@ roadmap, not started.
 | **Chimera** | Infrastructure protocol simulator for integration tests |
 | **[Transiva](https://github.com/zyvorai/zyvor-transiva)** | VM migration; Chimera implements the exact govmomi export boundaries Transiva's vSphere provider uses ([guide](docs/TRANSIVA.md)) |
 | **[h2kvm](https://github.com/zyvorai/zyvor-h2kvm)** | Disk conversion downstream of Transiva in the Chimera → Transiva → h2kvm → libvirt end-to-end chain |
-| **[Argus](https://github.com/zyvorai/zyvorai-argus)** | Autonomous QA; pairs with Chimera when the app under test talks to an infrastructure API |
+| **[Argus](https://zyvorai.github.io/zyvor-argus-site/)** | Autonomous QA; pairs with Chimera when the app under test talks to an infrastructure API |
 
 → [zyvor.dev](https://zyvor.dev)
 
