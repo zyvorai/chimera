@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Copyright 2026 Zyvor AI Labs · https://zyvor.dev
-# SPDX-License-Identifier: LicenseRef-Zyvor-Production-1.0
+# SPDX-License-Identifier: LicenseRef-Zyvor-Production-2.0
 set -euo pipefail
 TRANSIVA_DIR="${TRANSIVA_DIR:-../transiva}"
 LAB_URL="${CHIMERA_URL:-http://127.0.0.1:8989/sdk}"
