@@ -10,7 +10,7 @@ description: |
   Hyper-V WS-Man, AWS EC2/EBS, Azure ARM; Proxmox and OpenStack planned).
 vendor: "Zyvor AI Labs"
 homepage: "https://github.com/zyvorai/chimera"
-license: LicenseRef-Zyvor-Production-1.0
+license: LicenseRef-Zyvor-Production-2.0
 
 contents:
   - src: dist/build/chimera

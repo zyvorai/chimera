@@ -48,4 +48,4 @@ Chimera is a **test and compatibility appliance**. It is not VMware, Nutanix, Mi
 
 ---
 
-*Zyvor · [zyvor.dev](https://zyvor.dev) · Chimera · Zyvor Production License*
+*Zyvor · [zyvor.dev](https://zyvor.dev) · Chimera · Zyvor Production Licence v2.0*
